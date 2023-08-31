@@ -26,4 +26,10 @@ void IO_Init(void);
 void IO_triggerNewAcquisition(void);
 bool IO_getLastAcquiredValue(uint8_t channel, uint16_t* const value );
 void IO_newAcquisitionCompleted(uint8_t channel, uint16_t value);
+bool IO_oneWire_Read(void);
+void IO_oneWire_Input(void);
+void IO_oneWire_Output(void);
+void IO_oneWire_Set(void);
+void IO_oneWire_Clear(void);
+
 #endif

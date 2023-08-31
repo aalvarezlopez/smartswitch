@@ -38,6 +38,38 @@ void IO_Init(void)
     }
 }
 
+bool IO_oneWire_Read(void)
+{
+   return (PIOA->PIO_PDSR & PIO_PDSR_P16) != 0;
+}
+
+void IO_oneWire_Input(void)
+{
+    PIOA->PIO_WPMR = PIO_WPMR_WPKEY_PASSWD;
+    PIOA->PIO_ODR = PIO_PER_P16;
+    PIOA->PIO_PUER    = PIO_PUER_P16;
+    PIOA->PIO_WPMR = PIO_WPMR_WPEN |
+                     PIO_WPMR_WPKEY_PASSWD;
+}
+
+void IO_oneWire_Output(void)
+{
+    PIOA->PIO_WPMR = PIO_WPMR_WPKEY_PASSWD;
+    PIOA->PIO_OER = PIO_PER_P16;
+    PIOA->PIO_SODR = PIO_SODR_P16;
+    PIOA->PIO_WPMR = PIO_WPMR_WPEN |
+                     PIO_WPMR_WPKEY_PASSWD;
+}
+
+void IO_oneWire_Set(void)
+{
+    PIOA->PIO_SODR = PIO_CODR_P16;
+}
+
+void IO_oneWire_Clear(void)
+{
+    PIOA->PIO_CODR = PIO_CODR_P16;
+}
 /**
  * @brief Launch a new ADC acquisition using the channels which were previously
  * selected

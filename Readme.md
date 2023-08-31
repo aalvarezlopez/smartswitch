@@ -6,7 +6,8 @@ monitor at91sam4 gpnvm set 1
 
 | Name                | Pin   | Direction |
 |---------------------|-------|-----------|
-|  Q\_PULSE           | PA0   | INPUT     |
+| AIR\_TEMP\_SENSOR   | PA16  | IN/OTUPUT |
+| DIMMER (PWM 200 Hz) | PA7   | OTUPUT    |
 
 # Clock configuration
 

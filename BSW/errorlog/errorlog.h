@@ -10,6 +10,7 @@
 
 typedef enum{
 	SPI_MODULE = 10,
+	DS18B20_MODULE = 11,
 }MODULES_t;
 
 void errorlog_Init(void);

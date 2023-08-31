@@ -22,21 +22,27 @@ void EcuM_Startup_one(void)
     ecum_configure_uart_interface();
     ecum_configure_spi_interface();
     ecum_configure_analog_input_interface();
+    #endif
     ecum_configure_peripheral_clocks();
+    #if 0
     NvM_Init();
     NvM_ReadAll();
     #endif
 
+    DS18B20_Init();
     ISR_setInterruptEnable( UART1_IRQn, true);
-    while(1){continue;}
+    #if 0
     UART_Init();
+    #endif
 
     /* ToDo: Implement the WDG module, we are disabling the
      * WDG peripheral for now
      */
     WDT->WDT_MR &= ~(WDT_MR_WDRSTEN);
 
+    #if 0
     SPI_Init();
+    #endif
 }
 
 void EcuM_Startup_two(void)
@@ -91,10 +97,14 @@ void ecum_configure_io_interfaces(void)
 {
     PIOA->PIO_WPMR = PIO_WPMR_WPKEY_PASSWD;
 
-    PIOA->PIO_PER = PIO_PER_P7;
-    PIOA->PIO_OER = PIO_OER_P7;
+    PIOA->PIO_PER = PIO_PER_P7 | PIO_PER_P16;
+    PIOA->PIO_OER = PIO_OER_P7 | PIO_PER_P16;
 
     PIOA->PIO_CODR = PIO_CODR_P7;
+    PIOA->PIO_SODR = PIO_SODR_P16;
+
+    /* Pull up resistor */
+    PIOA->PIO_PUER    = PIO_PUER_P16;
 
     PIOA->PIO_WPMR = PIO_WPMR_WPEN |
                      PIO_WPMR_WPKEY_PASSWD;

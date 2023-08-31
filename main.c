@@ -21,6 +21,7 @@ int main(void)
         if(OS_systemtick == true){
             SPI_Task();
             FluidCtrl_Task();
+            DS18B20_Task();
             OS_systemtick = false;
         }
 
