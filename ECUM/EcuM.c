@@ -5,6 +5,7 @@
 #include "spi.h"
 #include "fluid_ctrl.h"
 #include "isr.h"
+#include "display.h"
 
 #define ADC_PRESCAL_VALUE_2_MHz 96u
 
@@ -43,6 +44,7 @@ void EcuM_Startup_one(void)
     #if 0
     SPI_Init();
     #endif
+    I2C_Init();
 }
 
 void EcuM_Startup_two(void)
@@ -50,6 +52,7 @@ void EcuM_Startup_two(void)
     uint8_t lastSequence = 0;
     uint8_t writeBuffer[16];
 
+    Display_Init();
     FluidCtrl_Init();
     ISR_setInterruptEnable( ADC_IRQn, true);
     ISR_setInterruptEnable( PIOA_IRQn, true);
@@ -99,6 +102,14 @@ void ecum_configure_io_interfaces(void)
 
     PIOA->PIO_PER = PIO_PER_P7 | PIO_PER_P16;
     PIOA->PIO_OER = PIO_OER_P7 | PIO_PER_P16;
+
+    PIOA->PIO_PDR = PIO_PER_P4 | PIO_PER_P3;
+
+    PIOA->PIO_ABCDSR[0] &= ~PIO_ABCDSR_P3;
+    PIOA->PIO_ABCDSR[1] &= ~PIO_ABCDSR_P3;
+
+    PIOA->PIO_ABCDSR[0] &= ~PIO_ABCDSR_P4;
+    PIOA->PIO_ABCDSR[1] &= ~PIO_ABCDSR_P4;
 
     PIOA->PIO_CODR = PIO_CODR_P7;
     PIOA->PIO_SODR = PIO_SODR_P16;
@@ -207,8 +218,8 @@ void ecum_configure_peripheral_clocks(void)
 {
     /* Unlock PMC registers*/
     PMC->PMC_WPMR = PMC_WPMR_WPKEY_PASSWD;
-    PMC->PMC_PCER0 = PMC_PCER0_PID9 | PMC_PCER0_PID11 |
-                     PMC_PCER0_PID12 | PMC_PCER0_PID21 | PMC_PCER0_PID24;
+    PMC->PMC_PCER0 = PMC_PCER0_PID9  | PMC_PCER0_PID11 | PMC_PCER0_PID12 |
+                     PMC_PCER0_PID19 | PMC_PCER0_PID21 | PMC_PCER0_PID24;
     PMC->PMC_PCER1 = PMC_PCER1_PID34;
     /* Lock PMC registers*/
     PMC->PMC_WPMR =   PMC_WPMR_WPEN |

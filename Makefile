@@ -7,7 +7,7 @@ TESTSRC := ./APP/utest_fluid_ctrl.c
 TESTOBJ := $(TESTSRC:%.c=%.o)
 
 SRCS := ./main.c
-SRCS += ./ECUM/EcuM.c ./BSW/SPI/spi.c ./BSW/uart/uart.c ./BSW/io/io.c
+SRCS += ./ECUM/EcuM.c ./BSW/SPI/spi.c ./BSW/uart/uart.c ./BSW/io/io.c ./BSW/I2C/i2c.c
 SRCS += ./BSW/errorlog/errorlog.c
 SRCS += ./BSW/isr/isr.c
 SRCS += ./BSW/rtc/rtc.c
@@ -17,16 +17,19 @@ SRCS += ./BSW/nvm/nvm.c
 SRCS += ./Drivers/USB_CDC/udi_cdc.c ./Drivers/USB_CDC/udi_cdc_desc.c
 SRCS += ./Drivers/USB_CDC/udc.c ./Drivers/USB_CDC/udp_device.c
 SRCS += ./Drivers/DS18B20/ds18b20.c ./Drivers/DS18B20/ds18b20_ll.c
+SRCS += ./Drivers/Display/display.c
 SRCS += $(wildcard ./cmsis/*.c)
 SRCS += ./APP/fluid_ctrl.c
 SRCS += ./misc/str.c
 SRCS += ./misc/delays.c
+SRCS += ./misc/graphics.c
 OBJECTS := $(SRCS:%.c=%.o)
 INCLUDES := -I./cmsis/
 INCLUDES += -I./cmsis/component/
 INCLUDES += -I./cmsis/instance/
 INCLUDES += -I./ECUM/
 INCLUDES += -I./BSW/SPI/
+INCLUDES += -I./BSW/I2C/
 INCLUDES += -I./BSW/io/
 INCLUDES += -I./BSW/uart
 INCLUDES += -I./BSW/isr
@@ -36,6 +39,7 @@ INCLUDES += -I./BSW/flash
 INCLUDES += -I./BSW/nvm
 INCLUDES += -I./Drivers/USB_CDC
 INCLUDES += -I./Drivers/DS18B20
+INCLUDES += -I./Drivers/Display
 INCLUDES += -I./APP/
 INCLUDES += -I./misc/
 
