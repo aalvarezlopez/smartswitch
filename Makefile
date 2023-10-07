@@ -18,6 +18,7 @@ SRCS += ./Drivers/USB_CDC/udi_cdc.c ./Drivers/USB_CDC/udi_cdc_desc.c
 SRCS += ./Drivers/USB_CDC/udc.c ./Drivers/USB_CDC/udp_device.c
 SRCS += ./Drivers/DS18B20/ds18b20.c ./Drivers/DS18B20/ds18b20_ll.c
 SRCS += ./Drivers/Display/display.c
+SRCS += ./Drivers/Eth/enc28j60.c
 SRCS += $(wildcard ./cmsis/*.c)
 SRCS += ./APP/fluid_ctrl.c
 SRCS += ./misc/str.c
@@ -40,6 +41,7 @@ INCLUDES += -I./BSW/nvm
 INCLUDES += -I./Drivers/USB_CDC
 INCLUDES += -I./Drivers/DS18B20
 INCLUDES += -I./Drivers/Display
+INCLUDES += -I./Drivers/Eth
 INCLUDES += -I./APP/
 INCLUDES += -I./misc/
 

@@ -12,7 +12,7 @@
 
 void SPI_Init(void);
 void SPI_Task(void);
-void SPI_sync_transmission(uint16_t len, const uint16_t* const din,
+void SPI_sync_transmission(uint16_t len, const uint8_t* const din,
                            uint16_t* const dout);
 
 #endif

@@ -6,6 +6,7 @@
 #include "fluid_ctrl.h"
 #include "isr.h"
 #include "display.h"
+#include "enc28j60.h"
 
 #define ADC_PRESCAL_VALUE_2_MHz 96u
 
@@ -19,31 +20,20 @@ void EcuM_Startup_one(void)
 {
     udd_detach();
     ecum_configure_io_interfaces();
-    #if 0
-    ecum_configure_uart_interface();
     ecum_configure_spi_interface();
+    #if 0
     ecum_configure_analog_input_interface();
     #endif
     ecum_configure_peripheral_clocks();
-    #if 0
-    NvM_Init();
-    NvM_ReadAll();
-    #endif
 
     DS18B20_Init();
-    ISR_setInterruptEnable( UART1_IRQn, true);
-    #if 0
-    UART_Init();
-    #endif
 
     /* ToDo: Implement the WDG module, we are disabling the
      * WDG peripheral for now
      */
     WDT->WDT_MR &= ~(WDT_MR_WDRSTEN);
 
-    #if 0
     SPI_Init();
-    #endif
     I2C_Init();
 }
 
@@ -54,8 +44,7 @@ void EcuM_Startup_two(void)
 
     Display_Init();
     FluidCtrl_Init();
-    ISR_setInterruptEnable( ADC_IRQn, true);
-    ISR_setInterruptEnable( PIOA_IRQn, true);
+    ENC_Init();
 
     udc_start();
     udd_send_remotewakeup();
@@ -103,7 +92,17 @@ void ecum_configure_io_interfaces(void)
     PIOA->PIO_PER = PIO_PER_P7 | PIO_PER_P16;
     PIOA->PIO_OER = PIO_OER_P7 | PIO_PER_P16;
 
+    PIOA->PIO_PER = PIO_PER_P14;
+    PIOA->PIO_OER = PIO_OER_P14;
+    PIOA->PIO_CODR = PIO_CODR_P14;
+    PIOA->PIO_SODR = PIO_SODR_P14;
+    PIOA->PIO_CODR = PIO_CODR_P14;
+    PIOA->PIO_SODR = PIO_SODR_P14;
+
+
     PIOA->PIO_PDR = PIO_PER_P4 | PIO_PER_P3;
+    PIOA->PIO_PDR = PIO_PER_P11 | PIO_PER_P12;
+    PIOA->PIO_PDR = PIO_PER_P13 | PIO_PER_P14;
 
     PIOA->PIO_ABCDSR[0] &= ~PIO_ABCDSR_P3;
     PIOA->PIO_ABCDSR[1] &= ~PIO_ABCDSR_P3;

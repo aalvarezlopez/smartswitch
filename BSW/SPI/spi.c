@@ -25,9 +25,10 @@ void SPI_Init(void)
      * Capture on rising and low when inactive
      */
     SPI->SPI_WPMR = SPI_WPMR_WPKEY_PASSWD;
+    SPI->SPI_CR = SPI_CR_SPIDIS;
 
     SPI->SPI_MR =  SPI_MR_MSTR | SPI_MR_PCS(0) | SPI_MR_DLYBCS(5);
-    SPI->SPI_CSR[0] =   SPI_CSR_NCPHA | SPI_CSR_BITS_9_BIT | SPI_CSR_BITS_9_BIT |
+    SPI->SPI_CSR[0] =  SPI_CSR_NCPHA |  SPI_CSR_BITS_8_BIT |
                         SPI_CSR_SCBR(SPI_BAUDRATE_8_MHZ) |
                         SPI_CSR_DLYBS(SPI_CFG_DLYBS) |
                         SPI_CSR_DLYBCT(0);
@@ -55,7 +56,7 @@ void SPI_Task(void)
  * @param dout Pointer to the array with the data to be transmitted
  */
 volatile  uint32_t spi_concurrent_tx = 0;
-void SPI_sync_transmission(uint16_t len, const uint16_t* const din,
+void SPI_sync_transmission(uint16_t len, const uint8_t* const din,
                            uint16_t* const dout)
 {
     uint8_t iteration = 0;
@@ -75,16 +76,5 @@ void SPI_sync_transmission(uint16_t len, const uint16_t* const din,
         dout[i] = SPI->SPI_RDR; /* Read data */
         SPI->SPI_TDR = din[i];
         dout[i] = SPI->SPI_RDR; /* Read data */
-        #if 0
-        iteration = 0;
-        while( (SPI->SPI_SR & SPI_SR_RDRF) == 0 ){
-            iteration++;
-            if(iteration > SPI_MAX_ITER){
-                errorlog_reportError( SPI_MODULE, NULL, 0);
-                break;
-            }
-        }
-        dout[i] = SPI->SPI_RDR; /* Read data */
-        #endif
     }
 }

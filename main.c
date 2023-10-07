@@ -1,6 +1,7 @@
 #include "stdint.h"
 #include "stdbool.h"
 #include "EcuM.h"
+#include "enc28j60.h"
 
 extern volatile bool OS_systemtick;
 
@@ -22,6 +23,7 @@ int main(void)
             SPI_Task();
             FluidCtrl_Task();
             DS18B20_Task();
+            ENC_Task();
             OS_systemtick = false;
         }
 

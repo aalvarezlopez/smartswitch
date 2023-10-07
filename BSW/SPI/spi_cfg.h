@@ -14,7 +14,7 @@
 #ifdef DEBUG_MODE
 #define SPI_BAUDRATE_8_MHZ  32u
 #else
-#define SPI_BAUDRATE_8_MHZ  3u
+#define SPI_BAUDRATE_8_MHZ  6u
 #endif
 /* Configure wait delay between CS falling edge and SPK rising/falling edge */
 #define SPI_CFG_DLYBS       5u
