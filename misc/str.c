@@ -51,6 +51,11 @@ void* memset(void *dst, int value, size_t len)
     return (dst + i);
 }
 
+void* memcpy_P(void *dst, const void *src, size_t len)
+{
+    memcpy(dst, src, len);
+}
+
 void* memcpy(void *dst, const void *src, size_t len)
 {
     uint16_t i;

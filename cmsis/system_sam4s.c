@@ -113,10 +113,11 @@ void SystemInit( void )
 #if defined(ID_EFC1)
     EFC1->EEFC_FMR = EEFC_FMR_FWS(1) | EEFC_FMR_CLOE;
 #endif
+
     /* update systemCoreClock with current clock configuration*/
     SystemCoreClockUpdate();
 
-    SysTickStart();
+    //SysTickStart();
 }
 
 uint32_t SystemGetCoreClock(void)

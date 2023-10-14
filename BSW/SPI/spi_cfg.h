@@ -11,6 +11,7 @@
 
 /* Main clock is 96 Mhz and baudrate shall be 2 MHz, therefore the prescaler
  * shall be set to 48*/
+#define DEBUG_MODE
 #ifdef DEBUG_MODE
 #define SPI_BAUDRATE_8_MHZ  32u
 #else
@@ -19,6 +20,6 @@
 /* Configure wait delay between CS falling edge and SPK rising/falling edge */
 #define SPI_CFG_DLYBS       5u
 /* Configure delay between consecutive transferes */
-#define SPI_CFG_DLYBCT      5u
+#define SPI_CFG_DLYBCT      1u
 
 #endif

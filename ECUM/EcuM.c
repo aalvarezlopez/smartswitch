@@ -1,3 +1,4 @@
+#include "stdint.h"
 #include "EcuM.h"
 #include "EcuM_pri.h"
 #include "sam4s4a.h"
@@ -18,7 +19,7 @@ uint32_t system_tick_counter_ref = 0;
  */
 void EcuM_Startup_one(void)
 {
-    udd_detach();
+    //ecum_configure_io_interfaces();
     ecum_configure_io_interfaces();
     ecum_configure_spi_interface();
     #if 0
@@ -26,7 +27,7 @@ void EcuM_Startup_one(void)
     #endif
     ecum_configure_peripheral_clocks();
 
-    DS18B20_Init();
+    //DS18B20_Init();
 
     /* ToDo: Implement the WDG module, we are disabling the
      * WDG peripheral for now
@@ -34,7 +35,7 @@ void EcuM_Startup_one(void)
     WDT->WDT_MR &= ~(WDT_MR_WDRSTEN);
 
     SPI_Init();
-    I2C_Init();
+    //I2C_Init();
 }
 
 void EcuM_Startup_two(void)
@@ -42,12 +43,11 @@ void EcuM_Startup_two(void)
     uint8_t lastSequence = 0;
     uint8_t writeBuffer[16];
 
+    #if 0
     Display_Init();
     FluidCtrl_Init();
+    #endif
     ENC_Init();
-
-    udc_start();
-    udd_send_remotewakeup();
 }
 
 uint32_t EcuM_GetCurrentCounter(void)
@@ -90,15 +90,7 @@ void ecum_configure_io_interfaces(void)
     PIOA->PIO_WPMR = PIO_WPMR_WPKEY_PASSWD;
 
     PIOA->PIO_PER = PIO_PER_P7 | PIO_PER_P16;
-    PIOA->PIO_OER = PIO_OER_P7 | PIO_PER_P16;
-
-    PIOA->PIO_PER = PIO_PER_P14;
-    PIOA->PIO_OER = PIO_OER_P14;
-    PIOA->PIO_CODR = PIO_CODR_P14;
-    PIOA->PIO_SODR = PIO_SODR_P14;
-    PIOA->PIO_CODR = PIO_CODR_P14;
-    PIOA->PIO_SODR = PIO_SODR_P14;
-
+    PIOA->PIO_OER = PIO_OER_P7 | PIO_OER_P16;
 
     PIOA->PIO_PDR = PIO_PER_P4 | PIO_PER_P3;
     PIOA->PIO_PDR = PIO_PER_P11 | PIO_PER_P12;
@@ -110,7 +102,7 @@ void ecum_configure_io_interfaces(void)
     PIOA->PIO_ABCDSR[0] &= ~PIO_ABCDSR_P4;
     PIOA->PIO_ABCDSR[1] &= ~PIO_ABCDSR_P4;
 
-    PIOA->PIO_CODR = PIO_CODR_P7;
+    PIOA->PIO_SODR = PIO_SODR_P7;
     PIOA->PIO_SODR = PIO_SODR_P16;
 
     /* Pull up resistor */
@@ -217,9 +209,8 @@ void ecum_configure_peripheral_clocks(void)
 {
     /* Unlock PMC registers*/
     PMC->PMC_WPMR = PMC_WPMR_WPKEY_PASSWD;
-    PMC->PMC_PCER0 = PMC_PCER0_PID9  | PMC_PCER0_PID11 | PMC_PCER0_PID12 |
-                     PMC_PCER0_PID19 | PMC_PCER0_PID21 | PMC_PCER0_PID24;
-    PMC->PMC_PCER1 = PMC_PCER1_PID34;
+    PMC->PMC_PCER0 = PMC_PCER0_PID11 | PMC_PCER0_PID12 |
+                     PMC_PCER0_PID19 | PMC_PCER0_PID21;
     /* Lock PMC registers*/
     PMC->PMC_WPMR =   PMC_WPMR_WPEN |
                       PMC_WPMR_WPKEY_PASSWD;

@@ -44,16 +44,6 @@ static void io_pin_init(uint32_t pin, uint32_t flags,
 	IRQn_Type port_irqn, uint8_t irq_level,
 	void (*handler)(uint32_t,uint32_t), uint32_t wkup)
 {
-	// IOPORT must be initialized before by ioport_init(), \see ioport_group.
-	pio_handler_set_pin(pin, flags, handler);
-	ioport_set_pin_sense_mode(pin, ioport_get_pin_level(pin) ?
-		IOPORT_SENSE_LEVEL_LOW : IOPORT_SENSE_LEVEL_HIGH);
-	NVIC_SetPriority(port_irqn, irq_level);
-	NVIC_EnableIRQ(port_irqn);
-	pio_enable_pin_interrupt(pin);
-	if (wkup) {
-		pmc_set_fast_startup_input(wkup);
-	}
 }
 
 //! \ingroup udd_group

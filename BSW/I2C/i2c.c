@@ -6,6 +6,7 @@
  * @date 2022-01-14
  */
 
+#include "stdint.h"
 #include <stdio.h>
 #include "i2c.h"
 #include "i2c_cfg.h"

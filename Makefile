@@ -1,5 +1,5 @@
-CC = arm-none-eabi-gcc
-LD = arm-none-eabi-ld
+CC = /opt/gcc-arm-none-eabi/bin/arm-none-eabi-gcc
+LD = /opt/gcc-arm-none-eabi/bin/arm-none-eabi-ld
 
 UNIT_TEST_REPORT := ./unit_test_report.txt
 
@@ -11,19 +11,22 @@ SRCS += ./ECUM/EcuM.c ./BSW/SPI/spi.c ./BSW/uart/uart.c ./BSW/io/io.c ./BSW/I2C/
 SRCS += ./BSW/errorlog/errorlog.c
 SRCS += ./BSW/isr/isr.c
 SRCS += ./BSW/rtc/rtc.c
-SRCS += ./BSW/flash/efc.c
-SRCS += ./BSW/flash/flash_efc.c
-SRCS += ./BSW/nvm/nvm.c
-SRCS += ./Drivers/USB_CDC/udi_cdc.c ./Drivers/USB_CDC/udi_cdc_desc.c
-SRCS += ./Drivers/USB_CDC/udc.c ./Drivers/USB_CDC/udp_device.c
-SRCS += ./Drivers/DS18B20/ds18b20.c ./Drivers/DS18B20/ds18b20_ll.c
-SRCS += ./Drivers/Display/display.c
-SRCS += ./Drivers/Eth/enc28j60.c
+#SRCS += ./BSW/Eth/dns.c
+#SRCS += ./BSW/Eth/stash.c
+#SRCS += ./BSW/Eth/udpserver.c
+SRCS += ./BSW/Eth/dhcp.c
+#SRCS += ./BSW/Eth/bufferfiller.c
+#SRCS += ./BSW/Eth/webutil.c
+SRCS += ./BSW/Eth/tcpip.c
+SRCS += ./BSW/Eth/EtherCard.c
+#SRCS += ./Drivers/DS18B20/ds18b20.c ./Drivers/DS18B20/ds18b20_ll.c
+#SRCS += ./Drivers/Display/display.c
+SRCS += ./Drivers/Enc/enc28j60.c
 SRCS += $(wildcard ./cmsis/*.c)
 SRCS += ./APP/fluid_ctrl.c
 SRCS += ./misc/str.c
 SRCS += ./misc/delays.c
-SRCS += ./misc/graphics.c
+#SRCS += ./misc/graphics.c
 OBJECTS := $(SRCS:%.c=%.o)
 INCLUDES := -I./cmsis/
 INCLUDES += -I./cmsis/component/
@@ -38,10 +41,11 @@ INCLUDES += -I./BSW/errorlog
 INCLUDES += -I./BSW/rtc
 INCLUDES += -I./BSW/flash
 INCLUDES += -I./BSW/nvm
+INCLUDES += -I./BSW/Eth
 INCLUDES += -I./Drivers/USB_CDC
 INCLUDES += -I./Drivers/DS18B20
 INCLUDES += -I./Drivers/Display
-INCLUDES += -I./Drivers/Eth
+INCLUDES += -I./Drivers/Enc
 INCLUDES += -I./APP/
 INCLUDES += -I./misc/
 

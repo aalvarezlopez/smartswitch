@@ -19,13 +19,15 @@ int main(void)
      * scheduler will run from the SystemTick ISR
      */
     while (true) {
+        #if 0
         if(OS_systemtick == true){
             SPI_Task();
             FluidCtrl_Task();
-            DS18B20_Task();
+            //DS18B20_Task();
             ENC_Task();
             OS_systemtick = false;
         }
+        #endif
 
     }
 

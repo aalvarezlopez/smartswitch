@@ -117,13 +117,13 @@ SECTIONS
     . = ALIGN(4);
     _etext = .;
 
-    .relocate : AT (_etext)
+    .data :
     {
-        . = ALIGN(4);
+        . = ALIGN(8);
         _srelocate = .;
-        *(.ramfunc .ramfunc.*);
+        . = ALIGN(8);
         *(.data .data.*);
-        . = ALIGN(4);
+        . = ALIGN(8);
         _erelocate = .;
     } > ram
 

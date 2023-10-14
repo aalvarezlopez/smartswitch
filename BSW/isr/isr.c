@@ -73,6 +73,31 @@ void ISR_setInterruptEnable(uint8_t isrNumber, bool state)
         NVIC_DisableIRQ(isrNumber);
     }
 }
+void NMI_Handler(void)
+{
+    while (1) {
+    }
+}
+void HardFault_Handler(void)
+{
+    while (1) {
+    }
+}
+void MemManage_Handler(void)
+{
+    while (1) {
+    }
+}
+void BusFault_Handler(void)
+{
+    while (1) {
+    }
+}
+void UsageFault_Handler(void)
+{
+    while (1) {
+    }
+}
 
 /**
  * @brief Systemtick shall be configured to generate and interruption
@@ -122,5 +147,4 @@ void UART1_Handler( void )
  */
 void UDP_Handler(void)
 {
-    udp_isr_handler();
 }

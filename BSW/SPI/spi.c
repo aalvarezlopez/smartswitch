@@ -7,11 +7,13 @@
  */
 
 #include <stdio.h>
+#include <stdint.h>
 #include "spi.h"
 #include "spi_cfg.h"
 #include "sam4s4a.h"
 #include "component_spi.h"
 #include "errorlog.h"
+#include "delays.h"
 
 
 /**
@@ -28,10 +30,10 @@ void SPI_Init(void)
     SPI->SPI_CR = SPI_CR_SPIDIS;
 
     SPI->SPI_MR =  SPI_MR_MSTR | SPI_MR_PCS(0) | SPI_MR_DLYBCS(5);
-    SPI->SPI_CSR[0] =  SPI_CSR_NCPHA |  SPI_CSR_BITS_8_BIT |
+    SPI->SPI_CSR[0] =  SPI_CSR_NCPHA |  SPI_CSR_BITS_16_BIT |
                         SPI_CSR_SCBR(SPI_BAUDRATE_8_MHZ) |
                         SPI_CSR_DLYBS(SPI_CFG_DLYBS) |
-                        SPI_CSR_DLYBCT(0);
+                        SPI_CSR_DLYBCT(SPI_CFG_DLYBCT);
 
     SPI->SPI_CR = SPI_CR_SPIEN;
 
@@ -55,26 +57,87 @@ void SPI_Task(void)
  * @param din Pointer to the array where the read data will be written
  * @param dout Pointer to the array with the data to be transmitted
  */
-volatile  uint32_t spi_concurrent_tx = 0;
-void SPI_sync_transmission(uint16_t len, const uint8_t* const din,
+volatile uint32_t iteration = 0;
+uint32_t spi_sr;
+uint32_t spirx;
+
+void SPI_sync_transmission(uint16_t len, const uint16_t* const din,
                            uint16_t* const dout)
 {
-    uint8_t iteration = 0;
-    spi_concurrent_tx+=len;
-    while( !(SPI->SPI_SR & SPI_SR_TXEMPTY) ){ continue; }
-    *dout = SPI->SPI_RDR; /* Read data to avoid overload*/
+    spi_sr = SPI->SPI_SR;
+    while( (spirx & SPI_SR_TXEMPTY) == 0 ){ spirx = SPI->SPI_SR; }
+    spirx = SPI->SPI_RDR & 0xFFFF; /* Read data to avoid overload*/
 
-    for(uint8_t i = 0; i < len; i++){
+    if(len == 1){
         iteration = 0;
-        while( (SPI->SPI_SR & SPI_SR_TDRE) == 0 ){
+        spi_sr = SPI->SPI_SR;
+        while( (spi_sr & SPI_SR_TDRE) == 0 ){
             iteration++;
             if(iteration > SPI_MAX_ITER){
                 errorlog_reportError( SPI_MODULE, NULL, 0);
                 break;
             }
+            spi_sr = SPI->SPI_SR;
         }
-        dout[i] = SPI->SPI_RDR; /* Read data */
-        SPI->SPI_TDR = din[i];
-        dout[i] = SPI->SPI_RDR; /* Read data */
+        SPI->SPI_TDR = din[0];
+        iteration = 0;
+        spi_sr = SPI->SPI_SR;
+        while( (spi_sr & SPI_SR_RDRF) == 0 ){
+            iteration++;
+            if(iteration > SPI_MAX_ITER){
+                errorlog_reportError( SPI_MODULE, NULL, 0);
+                break;
+            }
+            spi_sr = SPI->SPI_SR;
+        }
+        spirx = SPI->SPI_RDR;
+        dout[0] = (uint16_t)(spirx & 0xFFFF); /* Read data */
+    }else{
+        iteration = 0;
+        spi_sr = SPI->SPI_SR;
+        while( (spi_sr & SPI_SR_TDRE) == 0 ){
+            iteration++;
+            if(iteration > SPI_MAX_ITER){
+                errorlog_reportError( SPI_MODULE, NULL, 0);
+                break;
+            }
+            spi_sr = SPI->SPI_SR;
+        }
+        SPI->SPI_TDR = din[0];
+        iteration = 0;
+        spi_sr = SPI->SPI_SR;
+        while( (spi_sr & SPI_SR_TDRE) == 0 ){
+            iteration++;
+            if(iteration > SPI_MAX_ITER){
+                errorlog_reportError( SPI_MODULE, NULL, 0);
+                break;
+            }
+            spi_sr = SPI->SPI_SR;
+        }
+        SPI->SPI_TDR = din[1];
+        iteration = 0;
+        spi_sr = SPI->SPI_SR;
+        while( (spi_sr & SPI_SR_RDRF) == 0 ){
+            iteration++;
+            if(iteration > SPI_MAX_ITER){
+                errorlog_reportError( SPI_MODULE, NULL, 0);
+                break;
+            }
+            spi_sr = SPI->SPI_SR;
+        }
+        spirx = SPI->SPI_RDR;
+        dout[0] = (uint16_t)(spirx & 0xFFFF); /* Read data */
+        iteration = 0;
+        spi_sr = SPI->SPI_SR;
+        while( (spi_sr & SPI_SR_RDRF) == 0 ){
+            iteration++;
+            if(iteration > SPI_MAX_ITER){
+                errorlog_reportError( SPI_MODULE, NULL, 0);
+                break;
+            }
+            spi_sr = SPI->SPI_SR;
+        }
+        spirx = SPI->SPI_RDR;
+        dout[1] = (uint16_t)(spirx & 0xFFFF); /* Read data */
     }
 }
