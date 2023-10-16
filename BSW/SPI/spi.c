@@ -58,14 +58,14 @@ void SPI_Task(void)
  * @param dout Pointer to the array with the data to be transmitted
  */
 volatile uint32_t iteration = 0;
-uint32_t spi_sr;
-uint32_t spirx;
+volatile uint32_t spi_sr;
+volatile uint32_t spirx;
 
 void SPI_sync_transmission(uint16_t len, const uint16_t* const din,
                            uint16_t* const dout)
 {
     spi_sr = SPI->SPI_SR;
-    while( (spirx & SPI_SR_TXEMPTY) == 0 ){ spirx = SPI->SPI_SR; }
+    while( (spi_sr & SPI_SR_TXEMPTY) == 0 ){ spi_sr = SPI->SPI_SR; }
     spirx = SPI->SPI_RDR & 0xFFFF; /* Read data to avoid overload*/
 
     if(len == 1){

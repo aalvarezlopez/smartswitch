@@ -47,7 +47,8 @@ SEARCH_DIR(.)
 MEMORY
 {
 	rom (rx)  : ORIGIN = 0x00400000, LENGTH = 0x00040000 /* flash, 256K */
-	ram (rwx) : ORIGIN = 0x20000000, LENGTH = 0x00010000 /* sram, 64K */
+	ram (rwx) : ORIGIN = 0x20000000, LENGTH = 0x0000A000 /* sram, 64K */
+	stackm (rwx) : ORIGIN = 0x2000A000, LENGTH = 0x00003000 /* sram, 64K */
 }
 
 /* The stack size used by the application. NOTE: you need to adjust according to your application. */
@@ -148,7 +149,7 @@ SECTIONS
         . = . + __stack_size__;
         . = ALIGN(8);
         _estack = .;
-    } > ram
+    } > stackm
 
     . = ALIGN(4);
     _end = . ;
