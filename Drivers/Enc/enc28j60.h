@@ -35,7 +35,7 @@
  #define ENC_HEAP_START      SCRATCH_LIMIT
  #define ENC_HEAP_END        0x2000
 
-extern  uint32_t buffer[]; //!< Data buffer (shared by receive and transmit)
+extern  uint8_t buffer[]; //!< Data buffer (shared by receive and transmit)
 
 
 /**   @brief  Initialise SPI interface

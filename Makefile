@@ -19,14 +19,14 @@ SRCS += ./BSW/Eth/dhcp.c
 #SRCS += ./BSW/Eth/webutil.c
 SRCS += ./BSW/Eth/tcpip.c
 SRCS += ./BSW/Eth/EtherCard.c
-#SRCS += ./Drivers/DS18B20/ds18b20.c ./Drivers/DS18B20/ds18b20_ll.c
-#SRCS += ./Drivers/Display/display.c
+SRCS += ./Drivers/DS18B20/ds18b20.c ./Drivers/DS18B20/ds18b20_ll.c
+SRCS += ./Drivers/Display/display.c
 SRCS += ./Drivers/Enc/enc28j60.c
 SRCS += $(wildcard ./cmsis/*.c)
 SRCS += ./APP/fluid_ctrl.c
 SRCS += ./misc/str.c
 SRCS += ./misc/delays.c
-#SRCS += ./misc/graphics.c
+SRCS += ./misc/graphics.c
 OBJECTS := $(SRCS:%.c=%.o)
 INCLUDES := -I./cmsis/
 INCLUDES += -I./cmsis/component/
@@ -51,9 +51,9 @@ INCLUDES += -I./misc/
 
 LD_SCRIPT = ./flash.ld
 CFLAGS = -ggdb -mthumb -mcpu=cortex-m4 -D__SAM4S4A__
-CFLAGS += -Os -MD -std=c99 -c
+CFLAGS += -O0 -MD -std=c99 -c -fno-builtin
 CFLAGS += $(INCLUDES)
-LDFLAGS = -T $(LD_SCRIPT) -e Reset_Handler --print-memory-usage
+LDFLAGS = -T $(LD_SCRIPT) -e Reset_Handler
 
 .PHONY: all clean test style
 

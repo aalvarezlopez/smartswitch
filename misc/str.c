@@ -124,14 +124,12 @@ char* strstr(const char *str1, const char *str2)
     return init;
 }
 
-#if 0
 bool isDigit( unsigned char c)
 {
     bool result = false;
     if ( c >= '0' && c <= '9' ){ result = true;}
     return result;
 }
-#endif
 
 long atol(const char *num)
 {
@@ -142,7 +140,7 @@ long atol(const char *num)
         neg = 1;
         num++;
     }
-    while (*num && isdigit(*num)){
+    while (*num && isDigit(*num)){
         value = value * 10 + *num++  - '0';
     }
     value = neg ? -value : value;

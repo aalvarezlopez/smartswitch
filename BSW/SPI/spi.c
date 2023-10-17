@@ -15,11 +15,34 @@
 #include "errorlog.h"
 #include "delays.h"
 
+static uint8_t *ptrdout = NULL;
+static volatile uint16_t rcvFrames = 0;
+volatile uint32_t spiflags = 0;
+volatile uint32_t spitx = 0;
+volatile uint32_t spirx = 0;
+volatile uint32_t spiisr = 0;
+volatile uint32_t spiin = 0;
+volatile uint32_t spiout = 0;
+
+void SPI_Handler(void)
+{
+    spiin++;
+    spiflags = 0x1515AAAA;
+    spiisr++;
+    if( (SPI->SPI_SR & SPI_SR_RDRF) != 0 ){
+        spirx++;
+        *(ptrdout) = SPI->SPI_RDR;
+        ptrdout++;
+        rcvFrames++;
+    }
+    spiflags = 0x1515BBBB;
+    spiout++;
+}
 
 /**
  * @brief SPI driver initialitation
  *
- * SPI baudrate configured to run at 5 MHz
+ * SPI baudrate configured to run at 8 MHz
  */
 void SPI_Init(void)
 {
@@ -30,7 +53,7 @@ void SPI_Init(void)
     SPI->SPI_CR = SPI_CR_SPIDIS;
 
     SPI->SPI_MR =  SPI_MR_MSTR | SPI_MR_PCS(0) | SPI_MR_DLYBCS(5);
-    SPI->SPI_CSR[0] =  SPI_CSR_NCPHA |  SPI_CSR_BITS_16_BIT |
+    SPI->SPI_CSR[0] =  SPI_CSR_NCPHA |  SPI_CSR_BITS_8_BIT |
                         SPI_CSR_SCBR(SPI_BAUDRATE_8_MHZ) |
                         SPI_CSR_DLYBS(SPI_CFG_DLYBS) |
                         SPI_CSR_DLYBCT(SPI_CFG_DLYBCT);
@@ -38,6 +61,8 @@ void SPI_Init(void)
     SPI->SPI_CR = SPI_CR_SPIEN;
 
     SPI->SPI_WPMR = SPI_WPMR_WPKEY_PASSWD | SPI_WPMR_WPEN;
+    ISR_setInterruptEnable((IRQn_Type) ID_SPI, true);
+    SPI->SPI_IER = SPI_IER_RDRF;
 }
 
 
@@ -54,90 +79,37 @@ void SPI_Task(void)
  * @brief Transmit commands through the SPI bus
  *
  * @param len Number of bytes to be transmitted
- * @param din Pointer to the array where the read data will be written
- * @param dout Pointer to the array with the data to be transmitted
+ * @param txbuff Pointer to the array where the read data will be written
+ * @param rxbuff Pointer to the array with the data to be transmitted
  */
 volatile uint32_t iteration = 0;
-volatile uint32_t spi_sr;
-volatile uint32_t spirx;
 
-void SPI_sync_transmission(uint16_t len, const uint16_t* const din,
-                           uint16_t* const dout)
+void SPI_sync_transmission(uint16_t len, const uint8_t* const txbuff,
+                           uint8_t* const rxbuff)
 {
-    spi_sr = SPI->SPI_SR;
-    while( (spi_sr & SPI_SR_TXEMPTY) == 0 ){ spi_sr = SPI->SPI_SR; }
-    spirx = SPI->SPI_RDR & 0xFFFF; /* Read data to avoid overload*/
+    uint32_t txtemp;
+    ptrdout = rxbuff;
+    rcvFrames = 0;
+    spiflags = 0xBABEAAAA;
+    spitx = 0;
+    spirx = 0;
+    spiisr = 0;
 
-    if(len == 1){
+    while( (SPI->SPI_SR & SPI_SR_TXEMPTY) == 0 ){ continue; }
+
+    for(uint16_t i = 0; i < len; i++){
         iteration = 0;
-        spi_sr = SPI->SPI_SR;
-        while( (spi_sr & SPI_SR_TDRE) == 0 ){
+        while( (SPI->SPI_SR & SPI_SR_TDRE) == 0 ){
             iteration++;
             if(iteration > SPI_MAX_ITER){
                 errorlog_reportError( SPI_MODULE, NULL, 0);
                 break;
             }
-            spi_sr = SPI->SPI_SR;
         }
-        SPI->SPI_TDR = din[0];
-        iteration = 0;
-        spi_sr = SPI->SPI_SR;
-        while( (spi_sr & SPI_SR_RDRF) == 0 ){
-            iteration++;
-            if(iteration > SPI_MAX_ITER){
-                errorlog_reportError( SPI_MODULE, NULL, 0);
-                break;
-            }
-            spi_sr = SPI->SPI_SR;
-        }
-        spirx = SPI->SPI_RDR;
-        dout[0] = (uint16_t)(spirx & 0xFFFF); /* Read data */
-    }else{
-        iteration = 0;
-        spi_sr = SPI->SPI_SR;
-        while( (spi_sr & SPI_SR_TDRE) == 0 ){
-            iteration++;
-            if(iteration > SPI_MAX_ITER){
-                errorlog_reportError( SPI_MODULE, NULL, 0);
-                break;
-            }
-            spi_sr = SPI->SPI_SR;
-        }
-        SPI->SPI_TDR = din[0];
-        iteration = 0;
-        spi_sr = SPI->SPI_SR;
-        while( (spi_sr & SPI_SR_TDRE) == 0 ){
-            iteration++;
-            if(iteration > SPI_MAX_ITER){
-                errorlog_reportError( SPI_MODULE, NULL, 0);
-                break;
-            }
-            spi_sr = SPI->SPI_SR;
-        }
-        SPI->SPI_TDR = din[1];
-        iteration = 0;
-        spi_sr = SPI->SPI_SR;
-        while( (spi_sr & SPI_SR_RDRF) == 0 ){
-            iteration++;
-            if(iteration > SPI_MAX_ITER){
-                errorlog_reportError( SPI_MODULE, NULL, 0);
-                break;
-            }
-            spi_sr = SPI->SPI_SR;
-        }
-        spirx = SPI->SPI_RDR;
-        dout[0] = (uint16_t)(spirx & 0xFFFF); /* Read data */
-        iteration = 0;
-        spi_sr = SPI->SPI_SR;
-        while( (spi_sr & SPI_SR_RDRF) == 0 ){
-            iteration++;
-            if(iteration > SPI_MAX_ITER){
-                errorlog_reportError( SPI_MODULE, NULL, 0);
-                break;
-            }
-            spi_sr = SPI->SPI_SR;
-        }
-        spirx = SPI->SPI_RDR;
-        dout[1] = (uint16_t)(spirx & 0xFFFF); /* Read data */
+        txtemp = (uint32_t)txbuff[i];
+        SPI->SPI_TDR = txtemp;
+        spitx ++;
     }
+    while(rcvFrames < len){ continue; }
+    spiflags = 0xBABEBBBB;
 }

@@ -68,9 +68,9 @@ void ISR_enableAllInterrupts(void)
 void ISR_setInterruptEnable(uint8_t isrNumber, bool state)
 {
     if(state){
-        NVIC_EnableIRQ(isrNumber);
+        NVIC->ISER[(((uint32_t)isrNumber) >> 5UL)] = (uint32_t)(1UL << (((uint32_t)isrNumber) & 0x1FUL));
     }else{
-        NVIC_DisableIRQ(isrNumber);
+        NVIC->ICER[(((uint32_t)isrNumber) >> 5UL)] = (uint32_t)(1UL << (((uint32_t)isrNumber) & 0x1FUL));
     }
 }
 void NMI_Handler(void)

@@ -381,88 +381,50 @@ uint8_t ntpProcessAnswer (uint32_t *time,uint8_t dstport_l) {
 #endif
 void udpPrepare (uint16_t sport, const uint8_t *dip, uint16_t dport) {
     buffer[0] = 0xFF;
-    buffer[0] <<= 8;
-    buffer[0] |= 0xFF;
-    buffer[0] <<= 8;
-    buffer[0] |= 0xFF;
-    buffer[0] <<= 8;
-    buffer[0] |= 0xFF;
-
     buffer[1] = 0xFF;
-    buffer[1] <<= 8;
-    buffer[1] |= 0xFF;
-    buffer[1] <<= 8;
-    buffer[1] |= mymac[0];
-    buffer[1] <<= 8;
-    buffer[1] |= mymac[1];
-
-    buffer[2] = mymac[2];
-    buffer[2] <<= 8;
-    buffer[2] |= mymac[3];
-    buffer[2] <<= 8;
-    buffer[2] |= mymac[4];
-    buffer[2] <<= 8;
-    buffer[2] |= mymac[5];
-
-    buffer[3] = ETHTYPE_IP_H_V; // ETH TYPE
-    buffer[3] <<= 8;
-    buffer[3] |= ETHTYPE_IP_L_V; // ETH TYPE
-    buffer[3] <<= 8;
+    buffer[2] = 0xFF;
+    buffer[3] = 0xFF;
+    buffer[4] = 0xFF;
+    buffer[5] = 0xFF;
+    buffer[6] = mymac[0];
+    buffer[7] = mymac[1];
+    buffer[8] = mymac[2];
+    buffer[9] = mymac[3];
+    buffer[10] = mymac[4];
+    buffer[11] = mymac[5];
+    buffer[12] = ETHTYPE_IP_H_V; // ETH TYPE
+    buffer[13] = ETHTYPE_IP_L_V; // ETH TYPE
     /* *************** IP FRAME **************** */
-    buffer[3] |= 0x45; //VERSION | IHL
-    buffer[3] <<= 8;
-    buffer[3] |= 0;    // TOS
-
-    buffer[4] = 0x01; // TOTAL LENGTH
-    buffer[4] <<= 8;
-    buffer[4] |= 0x27;
-    buffer[4] <<= 8;
-    buffer[4] |= 0x00; // IDENTIFICATION
-    buffer[4] <<= 8;
-    buffer[4] |= 0x00;
-
-    buffer[5] = 0x40;  // FLAGS | FRAGMENT OFFSET
-    buffer[5] <<= 8;
-    buffer[5] |= 0x00; // FRAGMENT OFFSET
-    buffer[5] <<= 8;
-    buffer[5] |= 0x20; // TTL
-    buffer[5] <<= 8;
-    buffer[5] |= 17;   // PROTOCOL
-
-    buffer[6] = 0x00; // HEADER CHKS
-    buffer[6] <<= 8;
-    buffer[6] |=  0x00;// HEADER CHKS
-    buffer[6] <<= 8;
-    buffer[6] |= myip[0];  // SRC ADD
-    buffer[6] <<= 8;
-    buffer[6] |= myip[1]; // SRC ADD
-
-    buffer[7] = myip[2];// SRC ADD
-    buffer[7] <<= 8;
-    buffer[7] |= myip[3];// SRC ADD
-    buffer[7] <<= 8;
-    buffer[7] |=  0xFF; // DST ADD
-    buffer[7] <<= 8;
-    buffer[7] |=  0xFF;// DST ADD
-
-    buffer[8] = 0xFF;// DST ADD
-    buffer[8] <<= 8;
-    buffer[8] |=  0xFF;// DST ADD
-    buffer[8] <<= 16;
+    buffer[14] = 0x45; //VERSION | IHL
+    buffer[15] = 0;    // TOS
+    buffer[16] = 0x01; // TOTAL LENGTH
+    buffer[17] = 0x24;
+    buffer[18] = 0x00; // IDENTIFICATION
+    buffer[19] = 0x00;
+    buffer[20] = 0x40;  // FLAGS | FRAGMENT OFFSET
+    buffer[21] = 0x00; // FRAGMENT OFFSET
+    buffer[22] = 0x20; // TTL
+    buffer[23] = 17;   // PROTOCOL
+    buffer[24] = 0x00; // HEADER CHKS
+    buffer[25] =  0x00;// HEADER CHKS
+    buffer[26] = myip[0];  // SRC ADD
+    buffer[27] = myip[1]; // SRC ADD
+    buffer[28] = myip[2];// SRC ADD
+    buffer[29] = myip[3];// SRC ADD
+    buffer[30] =  0xFF; // DST ADD
+    buffer[31] =  0xFF;// DST ADD
+    buffer[32] = 0xFF;// DST ADD
+    buffer[33] =  0xFF;// DST ADD
     /* **************** UDP FRAME ************* */
-    buffer[8] |=  sport;
-
-    buffer[9] = dport;
-    buffer[9] <<= 8;
-    buffer[9] |= 0x01; // LENGTH
-    buffer[9] <<= 8;
-    buffer[9] |=  0x13; // LENGTH
-
-    buffer[10] = 0x00; // CRC
-    buffer[10] <<= 8;
-    buffer[10] |=  0x00;  // CRC
-    buffer[10] <<= 8;
-    /**** DATA 2 bytes******/
+    buffer[34] =  sport >> 8;
+    buffer[35] =  sport & 0xFF;
+    buffer[36] = dport >> 8;
+    buffer[37] = dport;
+    buffer[38] = 0x01; // LENGTH
+    buffer[39] =  0x10; // LENGTH
+    buffer[40] = 0x00; // CRC
+    buffer[41] =  0x00;  // CRC
+    /**** DATA ******/
 }
 
 

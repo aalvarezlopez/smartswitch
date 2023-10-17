@@ -31,7 +31,8 @@
 #define DHCP_NAK 6
 #define DHCP_RELEASE 7
 
-static const uint32_t cookie = 0x630820363 ;
+void DhcpStateMachine (uint16_t len);
+const uint32_t cookie = 0x630820363 ;
 // DHCP States for access in applications (ref RFC 2131)
 enum {
     DHCP_STATE_INIT,
@@ -99,28 +100,28 @@ typedef struct {
 // The time value of 0xffffffff is reserved to represent "infinity".
 #define DHCP_INFINITE_LEASE  0xffffffff
 
-static uint32_t dhcpState = DHCP_STATE_INIT;
-static uint8_t hostname[DHCP_HOSTNAME_MAX_LEN] = "Arduino-ENC28j60-00";   // Last two characters will be filled by last 2 MAC digits ;
-static uint32_t currentXid;
-static uint32_t stateTimer;
-static uint32_t leaseStart;
-static uint32_t leaseTime;
-static uint32_t* bufPtr;
+ uint32_t dhcpState = DHCP_STATE_INIT;
+ uint8_t hostname[DHCP_HOSTNAME_MAX_LEN] = "Arduino-ENC28j60-00";   // Last two characters will be filled by last 2 MAC digits ;
+ uint32_t currentXid;
+ uint32_t stateTimer;
+ uint32_t leaseStart;
+ uint32_t leaseTime;
+ uint32_t* bufPtr;
 
-static uint32_t* dhcpCustomOptionList = NULL;
+ uint32_t* dhcpCustomOptionList = NULL;
 
 extern uint32_t allOnes[];// = { 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF };
 
-static void addToBuf (uint32_t b) {
+ void addToBuf (uint32_t b) {
     *bufPtr++ = b;
 }
 
-static void addBytes (uint32_t len, const uint32_t* data) {
+ void addBytes (uint32_t len, const uint32_t* data) {
     while (len-- > 0)
         addToBuf(*data++);
 }
 
-static void addOption (uint32_t opt, uint32_t len, const uint32_t* data) {
+ void addOption (uint32_t opt, uint32_t len, const uint32_t* data) {
     addToBuf(opt);
     addToBuf(len);
     addBytes(len, data);
@@ -160,7 +161,7 @@ static void addOption (uint32_t opt, uint32_t len, const uint32_t* data) {
 
 #define DHCP_HTYPE_ETHER 1
 
-static void send_dhcp_message(uint32_t *requestip) {
+ void send_dhcp_message(uint32_t *requestip) {
 
     memset(buffer, 0, UDP_DATA_P + sizeof( DHCPdata ));
 
@@ -168,138 +169,76 @@ static void send_dhcp_message(uint32_t *requestip) {
                           (dhcpState == DHCP_STATE_BOUND ? dhcpip : allOnes),
                           DHCP_SERVER_PORT);
 
-    buffer[10] |= DHCP_BOOTREQUEST; // OPERATION
-    buffer[10] <<= 8;
-    buffer[10] |= 1; //HTYPE
-
-    buffer[11] = 6;// HLEN
-    buffer[11] <<= 8;
-    buffer[11] |= 0;// HOPS
-    buffer[11] <<= 8;
-    buffer[11] |=  0xDE; // XID
-    buffer[11] <<= 8;
-    buffer[11] |=  0xAD; //XID
-
-    buffer[12] = 0xBE;// XID
-    buffer[12] <<= 8;
-    buffer[12] |= 0xEF;// XID
-    buffer[12] <<= 8;
-    buffer[12] |=  0x0; // SECS
-    buffer[12] <<= 8;
-    buffer[12] |=  0x0;// SECS
-
-    buffer[13] = 0;// FLAGS
-    buffer[13] <<= 8;
-    buffer[13] |= 0;// FLAGS
-    buffer[13] <<= 8;
-    buffer[13] |=  myip[0]; // IP CLIENT
-    buffer[13] <<= 8;
-    buffer[13] |=  myip[1];// IP CLIENT
-
-    buffer[14] = myip[2];// IP CLIENT
-    buffer[14] <<= 8;
-    buffer[14] |= myip[3];// IP CLIENT
-    buffer[14] <<= 8;
-    buffer[14] |=  0x0; // MY IP
-    buffer[14] <<= 8;
-    buffer[14] |=  0x0;// MY IP
-
-    buffer[15] = 0x0;// MY IP
-    buffer[15] <<= 8;
-    buffer[15] |= 0x0;// MY IP
-    buffer[15] <<= 8;
-    buffer[15] |=  0x0; // IP SERVER
-    buffer[15] <<= 8;
-    buffer[15] |=  0x0;// IP SERVER
-
-    buffer[16] = 0x0;// IP SERVER
-    buffer[16] <<= 8;
-    buffer[16] |= 0;// IP SERVER
-    buffer[16] <<= 8;
-    buffer[16] |=  0x0; // IP GW
-    buffer[16] <<= 8;
-    buffer[16] |=  0x0;// IP GW
-
-    buffer[17] = 0;// IP GW
-    buffer[17] <<= 8;
-    buffer[17] |= 0;// IP GW
-    buffer[17] <<= 8;
-    buffer[17] |=  mymac[0]; // CH ADD [x16 15]
-    buffer[17] <<= 8;
-    buffer[17] |=  mymac[1];// CH ADD [x16 14]
-
-    buffer[18] = mymac[2];
-    buffer[18] <<= 8;
-    buffer[18] |= mymac[3];
-    buffer[18] <<= 8;
-    buffer[18] |= mymac[4];
-    buffer[18] <<= 8;
-    buffer[18] |= mymac[5];
-
-    buffer[19] = 0; // 10 bytes padding
-    buffer[20] = 0; // 10 bytes padding
-    buffer[21] = 0; // 2 bytes padding |  bytes sname [x64]
-
-    buffer[22] = 0;// sname [x64]
-    buffer[23] = 0;// sname [x64]
-    buffer[24] = 0;// sname [x64]
-    buffer[25] = 0;// sname [x64]
-    buffer[26] = 0;// sname [x64]
-    buffer[27] = 0;// sname [x64]
-    buffer[28] = 0;// sname [x64]
-    buffer[29] = 0;// sname [x64]
-    buffer[30] = 0;// sname [x64]
-    buffer[31] = 0;// sname [x64]
-    buffer[32] = 0;// sname [x64]
-    buffer[33] = 0;// sname [x64]
-    buffer[34] = 0;// sname [x64]
-    buffer[35] = 0;// sname [x64]
-    buffer[36] = 0;// sname [x64]
-    buffer[37] = 0;// sname [x64] 2 bytes | sfile 2 bytes
-    buffer[38] = 0;// sfile [x128]
-    buffer[39] = 0;// sfile [x128]
-    buffer[40] = 0;// sfile [x128]
-    buffer[41] = 0;// sfile [x128]
-    buffer[42] = 0;// sfile [x128]
-    buffer[43] = 0;// sfile [x128]
-    buffer[44] = 0;// sfile [x128]
-    buffer[45] = 0;// sfile [x128]
-    buffer[46] = 0;// sfile [x128]
-    buffer[47] = 0;// sfile [x128]
-    buffer[48] = 0;// sfile [x128]
-    buffer[49] = 0;// sfile [x128]
-    buffer[50] = 0;// sfile [x128]
-    buffer[51] = 0;// sfile [x128]
-    buffer[52] = 0;// sfile [x128]
-    buffer[53] = 0;// sfile [x128]
-    buffer[54] = 0;// sfile [x128]
-    buffer[55] = 0;// sfile [x128]
-    buffer[56] = 0;// sfile [x128]
-    buffer[57] = 0;// sfile [x128]
-    buffer[58] = 0;// sfile [x128]
-    buffer[59] = 0;// sfile [x128]
-    buffer[60] = 0;// sfile [x128]
-    buffer[61] = 0;// sfile [x128]
-    buffer[62] = 0;// sfile [x128]
-    buffer[63] = 0;// sfile [x128]
-    buffer[64] = 0;// sfile [x128]
-    buffer[65] = 0;// sfile [x128]
-    buffer[66] = 0;// sfile [x128]
-    buffer[67] = 0;// sfile [x128]
-    buffer[68] = 0;// sfile [x128]
-    buffer[69] = 0x6382; //sfile [x128] 2 bytes cokie
-    buffer[70] = 0x53633501; //cookie | 0x35 | len(1)
-    buffer[71] = 0x013D0701; // DHCP_DISCORE | CLIENT_ID | len(7) | HTYPE_ETHER
-    buffer[72] = 0x1A2B3C4D;// mac
-    buffer[73] = 0x5E6F0C03 ;//mac | HOSTNAME | len(3)
-    buffer[74] = 0x41414137; // HOSTNAME | PARAM_REQ_LIST
-    buffer[75] = 0x03010306; // len(3) | SUBNET | ROUTERS | NAME_SERVER
-    buffer[76] = 0xFF0000; // END OF FRAME | 0000
+    buffer[42] = DHCP_BOOTREQUEST; // OPERATION
+    buffer[43] = 1; //HTYPE
+    buffer[44] = 6;// HLEN
+    buffer[45] = 0;// HOPS
+    buffer[46] =  0xDE; // XID
+    buffer[47] =  0xAD; //XID
+    buffer[48] = 0xBE;// XID
+    buffer[49] = 0xEF;// XID
+    buffer[50] =  0x0; // SECS
+    buffer[51] =  0x0;// SECS
+    buffer[52] = 0;// FLAGS
+    buffer[53] = 0;// FLAGS
+    buffer[54] =  myip[0]; // IP CLIENT
+    buffer[55] =  myip[1];// IP CLIENT
+    buffer[56] = myip[2];// IP CLIENT
+    buffer[57] = myip[3];// IP CLIENT
+    buffer[58] =  0x0; // MY IP
+    buffer[59] =  0x0;// MY IP
+    buffer[60] = 0x0;// MY IP
+    buffer[61] = 0x0;// MY IP
+    buffer[62] =  0x0; // IP SERVER
+    buffer[63] =  0x0;// IP SERVER
+    buffer[64] = 0x0;// IP SERVER
+    buffer[65] = 0;// IP SERVER
+    buffer[66] =  0x0; // IP GW
+    buffer[67] =  0x0;// IP GW
+    buffer[68] = 0;// IP GW
+    buffer[69] = 0;// IP GW
+    buffer[70] =  mymac[0]; // CH ADD [x16 15]
+    buffer[71] =  mymac[1];// CH ADD [x16 14]
+    buffer[72] = mymac[2];
+    buffer[73] = mymac[3];
+    buffer[74] = mymac[4];
+    buffer[75] = mymac[5];
+    memset(buffer + 76, 0, 10);   //10 bytes padding
+    memset(buffer + 86, 0, 64);   //sname
+    memset(buffer + 150, 0, 128); //sfile
+    memset(buffer + 278, 0, 64);
+    buffer[278] = 0x63; //cookie
+    buffer[279] = 0x82;
+    buffer[280] = 0x53;
+    buffer[281] = 0x63;
+    buffer[282] = 0x35; //0x35
+    buffer[283] = 0x01; //len(1)
+    buffer[284] = 0x01; //DHCP_DISOVERY
+    buffer[285] = 0x3D; //CLIENT ID
+    buffer[286] = 0x07; // LEN(7)
+    buffer[287] = 0x01; // HTYPE
+    buffer[288] = 0x1A;
+    buffer[289] = 0x2B;
+    buffer[290] = 0x3C;
+    buffer[291] = 0x4D;// mac
+    buffer[292] = 0x5E;
+    buffer[293] = 0x6F; //mac
+    buffer[294] = 0x0C; //HOSTNAME
+    buffer[295] = 0x03; //len(3)
+    buffer[296] = 0x41; //'A'
+    buffer[297] = 0x41; //'A'
+    buffer[298] = 0x41; //'A'
+    buffer[299] = 0x37; // PARAM_REQ_LIST
+    buffer[300] = 0x03; // len(3)
+    buffer[301] = 0x01; // SUBNET
+    buffer[302] = 0x03; //ROUTER
+    buffer[303] = 0x06; // NAME_SERVER
+    buffer[304] = 0xFF; // END OF FRAME
     // packet size will be under 300 uint32_ts
-    udpTransmit(77*4);
+    udpTransmit(305);
 }
 
-static void process_dhcp_offer(uint16_t len, uint32_t *offeredip) {
+ void process_dhcp_offer(uint16_t len, uint32_t *offeredip) {
     // Map struct onto payload
     DHCPdata *dhcpPtr = (DHCPdata*) (buffer + UDP_DATA_P);
 
@@ -319,7 +258,7 @@ static void process_dhcp_offer(uint16_t len, uint32_t *offeredip) {
     } while (ptr < buffer + len);
 }
 
-static void process_dhcp_ack(uint16_t len) {
+ void process_dhcp_ack(uint16_t len) {
     // Map struct onto payload
     DHCPdata *dhcpPtr = (DHCPdata*) (buffer + UDP_DATA_P);
 
@@ -372,7 +311,10 @@ static void process_dhcp_ack(uint16_t len) {
 while (!done && ptr < buffer + len);
 }
 
-static bool dhcp_received_message_type (uint16_t len, uint32_t msgType) {
+ bool dhcp_received_message_type (uint16_t len, uint32_t msgType) {
+    if (len > 0){
+    }
+    #if 0
     // Map struct onto payload
     DHCPdata *dhcpPtr = (DHCPdata*) (buffer + UDP_DATA_P);
 
@@ -389,10 +331,11 @@ static bool dhcp_received_message_type (uint16_t len, uint32_t msgType) {
             ptr += optionLen;
         } while (ptr < buffer + len);
     }
+    #endif
     return false;
 }
 
-static char toAsciiHex(uint32_t b) {
+ char toAsciiHex(uint32_t b) {
     char c = b & 0x0f;
     c += (c <= 9) ? '0' : 'A'-10;
     return c;
@@ -424,20 +367,25 @@ bool dhcpSetup (const char *hname, bool fromRam) {
 
     dhcpState = DHCP_STATE_INIT;
 
-    while (dhcpState != DHCP_STATE_BOUND){
-        if (isLinkUp() == true){
-            DhcpStateMachine(packetReceive());
+    if (isLinkUp() == true){
+        while (dhcpState != DHCP_STATE_BOUND){
+            uint16_t packet_length = packetReceive();
+            DhcpStateMachine(packet_length);
         };
     }
+    #if 0
     updateBroadcastAddress();
     delaycnt = 0;
     return dhcpState == DHCP_STATE_BOUND ;
+    #else
+    return true;
+    #endif
 }
 
 #if 0
 void dhcpAddOptionCallback(uint32_t option, DhcpOptionCallback callback)
 {
-    static uint32_t optionList[2];
+     uint32_t optionList[2];
     optionList[0] = option;
     optionList[1] = 0;
     dhcpCustomOptionList = optionList;
@@ -472,6 +420,7 @@ void DhcpStateMachine (uint16_t len)
         break;
 
     case DHCP_STATE_SELECTING:
+        #if 0
         if (dhcp_received_message_type(len, DHCP_OFFER)) {
             uint32_t offeredip[IP_LEN];
             process_dhcp_offer(len, offeredip);
@@ -482,6 +431,8 @@ void DhcpStateMachine (uint16_t len)
                 dhcpState = DHCP_STATE_INIT;
             }
         }
+        #endif
+        dhcpState = DHCP_STATE_BOUND;
         break;
 
     case DHCP_STATE_REQUESTING:
@@ -500,6 +451,3 @@ void DhcpStateMachine (uint16_t len)
 
     }
 }
-
-
-

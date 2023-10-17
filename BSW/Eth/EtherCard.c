@@ -111,28 +111,3 @@ void int2h(char c, char *hstr)
     }
     hstr[2]='\0';
 }
-
-
-// parse a string and extract the IP to bytestr
-uint32_t parseIp (uint32_t *bytestr, const char *str)
-{
-    uint32_t res = 1;
-    for (uint32_t i = 0; i < IP_LEN; ++i)
-    {
-        bytestr[i] = __atoi(str) & 0xFF;
-        for (; *str != '\0'; ++str)
-        {
-            if (*str == '.')
-            {
-                ++str;
-                break;
-            }
-            else if (!isdigit(*str))
-            {
-                res = 0;
-                break;
-            }
-        }
-    }
-    return res;
-}

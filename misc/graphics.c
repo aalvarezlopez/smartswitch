@@ -16,6 +16,7 @@
  */
 
 #include "graphics.h"
+#include "stdint.h"
 #include "stdio.h"
 #include "display.h"
 

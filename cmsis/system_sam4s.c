@@ -117,7 +117,6 @@ void SystemInit( void )
     /* update systemCoreClock with current clock configuration*/
     SystemCoreClockUpdate();
 
-    //SysTickStart();
 }
 
 uint32_t SystemGetCoreClock(void)

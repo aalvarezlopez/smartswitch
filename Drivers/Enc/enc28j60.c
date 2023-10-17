@@ -14,12 +14,11 @@
 #include "spi.h"
 #include "delays.h"
 
-uint16_t eth_din[10];
-uint16_t eth_dout[10];
-uint32_t buffer[2048]; //!< Data buffer (shared by receive and transmit)
+uint8_t buffer[2048]; //!< Data buffer (shared by receive and transmit)
 uint16_t bufferSize; //!< Size of data buffer
 bool broadcast_enabled; //!< True if broadcasts enabled (used to allow temporary disable of broadcast for DHCP or other internal functions)
 bool promiscuous_enabled; //!< True if promiscuous mode enabled (used to allow temporary disable of promiscuous mode)
+uint16_t _lastReadBuflen = 0;
 
 void ENC_Init(void)
 {
@@ -36,65 +35,58 @@ void ENC_Task(void)
  uint32_t selectPin;
 
 
- uint32_t readOp (uint32_t op, uint32_t address)
+ uint8_t readOp (uint32_t op, uint32_t address)
 {
-    uint32_t result;
+    uint8_t result;
+    uint8_t spicmd_tx[2];
+    uint8_t spicmd_rx[2];
     if (address & 0x80) {
-        eth_din[0] = op | ((address) & ADDR_MASK);
-        eth_din[0] <<= 8;
-        eth_din[0] &= 0xFF00;
-        eth_din[1] = 0x0000;
-        SPI_sync_transmission(2, eth_din, eth_dout);
-        result = (eth_dout[1] >> 8) & 0x00FF;
+        spicmd_tx[0] = op | ((address) & ADDR_MASK);
+        spicmd_tx[1] = 0x00;
+        spicmd_tx[2] = 0x00;
+        SPI_sync_transmission(3, spicmd_tx, spicmd_rx);
+        result = spicmd_rx[2];
     }else{
-        eth_din[0] = op | (address & ADDR_MASK);
-        eth_din[0] <<= 8;
-        eth_din[0] &= 0xFF00;
-        SPI_sync_transmission(1, eth_din, eth_dout);
-        result = eth_dout[0];
+        spicmd_tx[0] = op | (address & ADDR_MASK);
+        spicmd_tx[1] = 0x00;
+        SPI_sync_transmission(2, spicmd_tx, spicmd_rx);
+        result = spicmd_rx[1];
     }
     return result;
 }
 
  void writeOp (uint32_t op, uint32_t address, uint32_t data)
 {
-    eth_din[0] = op | (address & ADDR_MASK);
-    eth_din[0] <<= 8;
-    eth_din[0] |= (data & 0xFF);
-    SPI_sync_transmission(1, eth_din, eth_dout);
+    uint8_t spicmd_tx[2];
+    uint8_t spicmd_rx[2];
+    spicmd_tx[0] = op | (address & ADDR_MASK);
+    spicmd_tx[1] = (uint8_t)data;
+    SPI_sync_transmission(2, spicmd_tx, spicmd_rx);
 }
 
- void readBuf(uint16_t len, uint32_t *data)
+void readBuf(uint16_t len, uint8_t *data)
 {
-    for(uint16_t i = 0; i < len; i++){
-        uint32_t temp;
-        eth_din[0] = ENC28J60_READ_BUF_MEM;
-        eth_din[0] <<= 8;
-        SPI_sync_transmission(1, eth_din, eth_dout);
-        temp =  (uint32_t)(eth_dout[0] & 0x000000FF);
-        if( (i % 4) == 0){
-            data[i/4] = temp;
-        }else{
-            data[(i/4)] <<= 8;
-            data[(i/4)] |= temp;
+    _lastReadBuflen = len;
+    uint8_t spicmd_tx[16];
+    for(uint16_t i = 0; i < len; i+=15){
+        spicmd_tx[0] = ENC28J60_READ_BUF_MEM;
+        spicmd_tx[1] = 0x00;
+        SPI_sync_transmission(16, spicmd_tx, (uint8_t*)(data + i ));
+        for(uint8_t j = 0; j < 15; j++){
+            data[ i + j ] = data[ i + j + 1];
         }
         delay_us(100);
     }
 }
 
- void writeBuf(uint16_t len, const uint32_t *data)
+ void writeBuf(uint16_t len, const uint8_t *data)
 {
-    uint32_t temp;
-    for(uint16_t i = 0; i < len; i++){
-        eth_din[0] = ENC28J60_WRITE_BUF_MEM;
-        eth_din[0] <<= 8;
-        if( (i % 4) == 0){
-            temp = data[i/4];
-        }else{
-            temp<<=8;
-        }
-        eth_din[0] |= ((temp >> 24) & 0xFF);
-        SPI_sync_transmission(1, eth_din, eth_dout);
+    uint8_t spicmd_tx[16];
+    uint8_t spicmd_rx[16];
+    for(uint16_t i = 0; i < len; i+=15){
+        spicmd_tx[0] = ENC28J60_WRITE_BUF_MEM;
+        memcpy( spicmd_tx + 1, data + i, 15);
+        SPI_sync_transmission(16, spicmd_tx, spicmd_rx);
     }
 }
 
@@ -197,7 +189,7 @@ uint32_t initialize (uint16_t size, const uint32_t *macaddr)
 
 bool isLinkUp()
 {
-    volatile result = readPhyByte(PHSTAT2);
+    uint8_t result = readPhyByte(PHSTAT2);
     volatile bool isup = (result & 0x04) != 0;
     return isup;
 }
@@ -287,7 +279,7 @@ void packetSend(uint16_t len)
                 struct transmit_status_vector tsv;
                 uint16_t etxnd = readReg(ETXND);
                 writeReg(ERDPT, etxnd + 1);
-                readBuf(sizeof(tsv), (uint32_t *) &tsv);
+                readBuf(sizeof(tsv), (uint8_t *) &tsv);
                 // LATECOL is bit number 29 in TSV (starting from 0)
                 if (!((readRegByte(EIR) & EIR_TXERIF) &&
                         (tsv.uint32_ts[3] & 1 << 5) /*tsv.transmitLateCollision*/) || retry > 16U) {
@@ -322,12 +314,12 @@ uint16_t packetReceive()
     }
     if (readRegByte(EPKTCNT) > 0) {
         writeReg(ERDPT, gNextPacketPtr);
-        struct __attribute__((packed, scalar_storage_order("big-endian"))) {
+        struct  {
             uint16_t nextPacket;
             uint16_t uint32_tCount;
             uint16_t status;
         } header;
-        readBuf(sizeof header, (uint32_t *) &header);
+        readBuf(sizeof header, (uint8_t *) &header);
         gNextPacketPtr  = header.nextPacket;
         len = header.uint32_tCount - 4; //remove the CRC count
         if (len > bufferSize - 1) {
@@ -343,26 +335,6 @@ uint16_t packetReceive()
         writeOp(ENC28J60_BIT_FIELD_SET, ECON2, ECON2_PKTDEC);
     }
     return len;
-}
-
-void copyout (uint32_t page, const uint32_t *data)
-{
-    uint16_t destPos = SCRATCH_START + (page << SCRATCH_PAGE_SHIFT);
-    if (destPos < SCRATCH_START || destPos > SCRATCH_LIMIT - SCRATCH_PAGE_SIZE) {
-        return;
-    }
-    writeReg(EWRPT, destPos);
-    writeBuf(SCRATCH_PAGE_SIZE, data);
-}
-
-void copyin (uint32_t page, uint32_t *data)
-{
-    uint16_t destPos = SCRATCH_START + (page << SCRATCH_PAGE_SHIFT);
-    if (destPos < SCRATCH_START || destPos > SCRATCH_LIMIT - SCRATCH_PAGE_SIZE) {
-        return;
-    }
-    writeReg(ERDPT, destPos);
-    readBuf(SCRATCH_PAGE_SIZE, data);
 }
 
 uint32_t peekin (uint32_t page, uint32_t off)

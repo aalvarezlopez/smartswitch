@@ -27,7 +27,9 @@ void EcuM_Startup_one(void)
     #endif
     ecum_configure_peripheral_clocks();
 
-    //DS18B20_Init();
+    #if 0
+    DS18B20_Init();
+    #endif
 
     /* ToDo: Implement the WDG module, we are disabling the
      * WDG peripheral for now
@@ -35,7 +37,7 @@ void EcuM_Startup_one(void)
     WDT->WDT_MR &= ~(WDT_MR_WDRSTEN);
 
     SPI_Init();
-    //I2C_Init();
+    I2C_Init();
 }
 
 void EcuM_Startup_two(void)
@@ -43,11 +45,9 @@ void EcuM_Startup_two(void)
     uint8_t lastSequence = 0;
     uint8_t writeBuffer[16];
 
-    #if 0
+    ENC_Init();
     Display_Init();
     FluidCtrl_Init();
-    #endif
-    ENC_Init();
 }
 
 uint32_t EcuM_GetCurrentCounter(void)

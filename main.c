@@ -14,21 +14,19 @@ int main(void)
     EcuM_Startup_one();
 
     EcuM_Startup_two();
+    SysTickStart();
 
     /*nothing else to do,
      * scheduler will run from the SystemTick ISR
      */
     while (true) {
-        #if 0
         if(OS_systemtick == true){
             SPI_Task();
             FluidCtrl_Task();
-            //DS18B20_Task();
+            DS18B20_Task();
             ENC_Task();
             OS_systemtick = false;
         }
-        #endif
-
     }
 
     return 0;
