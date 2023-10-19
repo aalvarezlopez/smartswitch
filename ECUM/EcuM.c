@@ -48,6 +48,7 @@ void EcuM_Startup_two(void)
     ENC_Init();
     Display_Init();
     FluidCtrl_Init();
+    TCPIP_Init();
 }
 
 uint32_t EcuM_GetCurrentCounter(void)

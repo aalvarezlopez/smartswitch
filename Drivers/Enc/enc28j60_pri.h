@@ -210,5 +210,8 @@
 
 #define FULL_SPEED  1   // switch to full-speed SPI for bulk transfers
 
+typedef struct __attribute__((__packed__)) transmit_status_vector_s {
+    uint32_t ts[7];
+}transmit_status_vector_st;
 
 #endif
