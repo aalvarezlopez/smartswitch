@@ -6,21 +6,24 @@
  * @date 2023-10-06
  */
 
- #include "stdint.h"
- #include "stdbool.h"
- #include "enc28j60_pri.h"
- #include "enc28j60.h"
+#include "stdint.h"
+#include "stdbool.h"
+#include "enc28j60_pri.h"
+#include "enc28j60.h"
 
- #include "spi.h"
- #include "delays.h"
+#include "spi.h"
+#include "delays.h"
 
 uint32_t Enc28j60Bank = 0;
-uint8_t _enc28_rev = 0;
+volatile uint8_t _enc28_rev = 0;
+volatile uint8_t g_enc28_erxfcon = 0;
 uint8_t rxbuffer[MAX_RX_BUFFER_N][ENC_MAX_BUF_SIZE];
 uint8_t rxbuffersize[MAX_RX_BUFFER_N];
 uint8_t nextrxslot = 0;
 uint8_t latestreadslot = 0;
-uint8_t macaddr[6] = {0x1A, 0x2B, 0x3C, 0x4D, 0x5E, 0x6F};
+uint8_t macaddr[6] = {0x00, 0xE9, 0x3A, 0x25, 0xC2, 0x27};
+
+uint32_t readRegByte (uint32_t address);
 
 void ENC_Init(void)
 {
@@ -34,6 +37,7 @@ void ENC_Init(void)
 void ENC_Task(void)
 {
     packetReceive();
+    g_enc28_erxfcon = readRegByte(ERXFCON);
 }
 
 bool ENC_getnewentry(uint8_t * buffer)
@@ -164,8 +168,7 @@ void initialize (void)
     writeReg(ETXST, TXSTART_INIT);
     writeReg(ETXND, TXSTOP_INIT);
     writePhy(PHLCON, 0x476);
-    writeRegByte(ERXFCON, ERXFCON_UCEN | ERXFCON_CRCEN | ERXFCON_PMEN |
-        ERXFCON_BCEN);
+    writeRegByte(ERXFCON, ERXFCON_UCEN | ERXFCON_ANDOR);
     writeReg(EPMM0, 0x303f);
     writeReg(EPMCS, 0xf7f9);
     writeRegByte(MACON1, MACON1_MARXEN);
@@ -191,6 +194,7 @@ void initialize (void)
     writeOp(ENC28J60_BIT_FIELD_SET, EIE, EIE_INTIE | EIE_PKTIE);
     writeOp(ENC28J60_BIT_FIELD_SET, ECON1, ECON1_RXEN);
     _enc28_rev = readRegByte(EREVID);
+    g_enc28_erxfcon = readRegByte(ERXFCON);
 }
 
 bool isLinkUp()
@@ -301,12 +305,12 @@ void powerUp()
     writeOp(ENC28J60_BIT_FIELD_SET, ECON1, ECON1_RXEN);
 }
 
-void enableBroadcast (bool temporary)
+void enableBroadcast (void)
 {
     writeRegByte(ERXFCON, readRegByte(ERXFCON) | ERXFCON_BCEN);
 }
 
-void disableBroadcast (bool temporary)
+void disableBroadcast (void)
 {
     writeRegByte(ERXFCON, readRegByte(ERXFCON) & ~ERXFCON_BCEN);
 }

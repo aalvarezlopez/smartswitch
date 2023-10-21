@@ -22,7 +22,8 @@
 #ifndef _STATIC
 #define _STATIC static
 #endif
-volatile bool OS_systemtick = false;
+volatile bool OS_Task_A = false;
+volatile bool OS_Task_B = false;
 volatile bool g_interrupt_enabled = true;
 
 uint32_t system_tick_counter = 0;
@@ -106,7 +107,10 @@ void UsageFault_Handler(void)
 void SysTick_Handler( void )
 {
     if ((system_tick_counter % TASK_SCH_300_ms) == 0) {
-        OS_systemtick = true;
+        OS_Task_A = true;
+    }
+    if ((system_tick_counter % TASK_SCH_30_ms) == 0) {
+        OS_Task_B = true;
     }
     system_tick_counter++;
 }

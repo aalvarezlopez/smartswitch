@@ -73,13 +73,13 @@ void initialize (void);
  *     @param  temporary Set true to temporarily enable broadcast
  *     @note   This will increase load on received data handling
  */
- void enableBroadcast(bool temporary);
+ void enableBroadcast(void);
 
 /**   @brief  Disable reception of broadcast messages
  *     @param  temporary Set true to only disable if temporarily enabled
  *     @note   This will reduce load on received data handling
  */
- void disableBroadcast(bool temporary);
+ void disableBroadcast(void);
 
 /**   @brief  Enables reception of multicast messages
  *     @note   This will increase load on received data handling

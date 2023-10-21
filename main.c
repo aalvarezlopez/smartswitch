@@ -3,7 +3,8 @@
 #include "EcuM.h"
 #include "enc28j60.h"
 
-extern volatile bool OS_systemtick;
+extern volatile bool OS_Task_A;
+extern volatile bool OS_Task_B;
 
 void SystemInit( void );
 
@@ -20,14 +21,17 @@ int main(void)
      * scheduler will run from the SystemTick ISR
      */
     while (true) {
-        if(OS_systemtick == true){
+        if(OS_Task_A == true){
             SPI_Task();
             FluidCtrl_Task();
             //DS18B20_Task();
+            OS_Task_A = false;
+        }
+        if(OS_Task_B == true){
             ENC_Task();
             EtherCard_Task();
             TCPIP_Task();
-            OS_systemtick = false;
+            OS_Task_B = false;
         }
     }
 

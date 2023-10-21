@@ -61,6 +61,7 @@ void SPI_Init(void)
     SPI->SPI_CR = SPI_CR_SPIEN;
 
     SPI->SPI_WPMR = SPI_WPMR_WPKEY_PASSWD | SPI_WPMR_WPEN;
+    NVIC_SetPriority((IRQn_Type) ID_SPI, 5);
     ISR_setInterruptEnable((IRQn_Type) ID_SPI, true);
     SPI->SPI_IER = SPI_IER_RDRF;
 }

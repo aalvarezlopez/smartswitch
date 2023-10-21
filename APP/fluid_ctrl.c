@@ -29,3 +29,7 @@ void FluidCtrl_Task(void)
 void FluidCtr_cdc_byte_ready(uint8_t port)
 {
 }
+
+void FluidCtrl_newFrame(const uint8_t * msg)
+{
+}

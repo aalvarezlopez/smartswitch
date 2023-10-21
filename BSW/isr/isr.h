@@ -15,6 +15,7 @@
 /* The LED1 is on for 500 ms and off for another 500 ms*/
 #define LED_DISPLAY_500_ms 500U
 #define TASK_SCH_300_ms 300U
+#define TASK_SCH_30_ms 30U
 
 void ISR_disableAllInterrupts(void);
 void ISR_enableAllInterrupts(void);

@@ -46,7 +46,7 @@ void EcuM_Startup_two(void)
     uint8_t writeBuffer[16];
 
     ENC_Init();
-    Display_Init();
+    //Display_Init();
     FluidCtrl_Init();
     TCPIP_Init();
 }
