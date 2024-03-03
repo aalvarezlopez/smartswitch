@@ -8,6 +8,7 @@
 #include "isr.h"
 #include "display.h"
 #include "enc28j60.h"
+#include "delays.h"
 
 #define ADC_PRESCAL_VALUE_2_MHz 96u
 
@@ -27,9 +28,7 @@ void EcuM_Startup_one(void)
     #endif
     ecum_configure_peripheral_clocks();
 
-    #if 0
     DS18B20_Init();
-    #endif
 
     /* ToDo: Implement the WDG module, we are disabling the
      * WDG peripheral for now
@@ -46,7 +45,7 @@ void EcuM_Startup_two(void)
     uint8_t writeBuffer[16];
 
     ENC_Init();
-    //Display_Init();
+    Display_Init();
     FluidCtrl_Init();
     TCPIP_Init();
 }
@@ -90,8 +89,8 @@ void ecum_configure_io_interfaces(void)
 {
     PIOA->PIO_WPMR = PIO_WPMR_WPKEY_PASSWD;
 
-    PIOA->PIO_PER = PIO_PER_P7 | PIO_PER_P16;
-    PIOA->PIO_OER = PIO_OER_P7 | PIO_OER_P16;
+    PIOB->PIO_PER = PIO_PER_P0 | PIO_PER_P1;
+    PIOB->PIO_OER = PIO_OER_P0 | PIO_OER_P1;
 
     PIOA->PIO_PDR = PIO_PER_P4 | PIO_PER_P3;
     PIOA->PIO_PDR = PIO_PER_P11 | PIO_PER_P12;
@@ -103,11 +102,6 @@ void ecum_configure_io_interfaces(void)
     PIOA->PIO_ABCDSR[0] &= ~PIO_ABCDSR_P4;
     PIOA->PIO_ABCDSR[1] &= ~PIO_ABCDSR_P4;
 
-    PIOA->PIO_SODR = PIO_SODR_P7;
-    PIOA->PIO_SODR = PIO_SODR_P16;
-
-    /* Pull up resistor */
-    PIOA->PIO_PUER    = PIO_PUER_P16;
 
     PIOA->PIO_WPMR = PIO_WPMR_WPEN |
                      PIO_WPMR_WPKEY_PASSWD;

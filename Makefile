@@ -13,6 +13,7 @@ SRCS += ./BSW/isr/isr.c
 SRCS += ./BSW/rtc/rtc.c
 SRCS += ./BSW/Eth/EtherCard.c
 SRCS += ./BSW/Eth/tcpip.c
+SRCS += ./BSW/Eth/arp.c
 SRCS += ./Drivers/DS18B20/ds18b20.c ./Drivers/DS18B20/ds18b20_ll.c
 SRCS += ./Drivers/Display/display.c
 SRCS += ./Drivers/Enc/enc28j60.c

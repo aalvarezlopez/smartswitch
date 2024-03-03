@@ -24,7 +24,7 @@ int main(void)
         if(OS_Task_A == true){
             SPI_Task();
             FluidCtrl_Task();
-            //DS18B20_Task();
+            DS18B20_Task();
             OS_Task_A = false;
         }
         if(OS_Task_B == true){

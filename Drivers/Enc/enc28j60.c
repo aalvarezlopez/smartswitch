@@ -21,7 +21,7 @@ uint8_t rxbuffer[MAX_RX_BUFFER_N][ENC_MAX_BUF_SIZE];
 uint8_t rxbuffersize[MAX_RX_BUFFER_N];
 uint8_t nextrxslot = 0;
 uint8_t latestreadslot = 0;
-uint8_t macaddr[6] = {0x00, 0xE9, 0x3A, 0x25, 0xC2, 0x27};
+uint8_t macaddr[6] = {0x00, 0xE9, 0x3A, 0x25, 0xC2, 0x29};
 
 uint32_t readRegByte (uint32_t address);
 
@@ -168,7 +168,13 @@ void initialize (void)
     writeReg(ETXST, TXSTART_INIT);
     writeReg(ETXND, TXSTOP_INIT);
     writePhy(PHLCON, 0x476);
+    #if 1
+    // Rx filter: only unicast messages
     writeRegByte(ERXFCON, ERXFCON_UCEN | ERXFCON_ANDOR);
+    #else
+    // Rx filter: both unicast and broadcast messages
+    writeRegByte(ERXFCON, ERXFCON_UCEN | ERXFCON_BCEN);
+    #endif
     writeReg(EPMM0, 0x303f);
     writeReg(EPMCS, 0xf7f9);
     writeRegByte(MACON1, MACON1_MARXEN);
@@ -219,7 +225,7 @@ void packetSend(uint16_t len, const uint8_t * buffer)
         // prepare new transmission
         if (retry == 0) {
             writeReg(EWRPT, TXSTART_INIT);
-            writeReg(ETXND, TXSTART_INIT + len + 1);
+            writeReg(ETXND, TXSTART_INIT + len);
             writeOp(ENC28J60_WRITE_BUF_MEM, 0, 0x02);
             eir_stat = readRegByte(ESTAT);
             writeBuf(len, buffer);

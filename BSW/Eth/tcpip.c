@@ -2,8 +2,11 @@
 #include "stdbool.h"
 #include "EtherCard.h"
 #include "tcpip.h"
+#include "arp.h"
 
 #define ETH_PROTOCOL_UDP 17
+
+bool linkup = false;
 
 void TCPIP_Init(void)
 {
@@ -17,6 +20,7 @@ void TCPIP_Task(void)
         sendUdpMessage();
         counter = 0;
     }
+    linkup = isLinkUp();
 }
 
 void TCPIP_newmessage(const uint8_t * buffer)
@@ -65,18 +69,18 @@ void fill_checksum(uint8_t dest, uint8_t off, uint16_t len,uint8_t type)
 void sendUdpMessage(void)
 {
     uint8_t buffer[64];
-    buffer[0] = 0x48;
-    buffer[1] = 0xBA;
-    buffer[2] = 0x4E;
-    buffer[3] = 0xAF;
-    buffer[4] = 0x87;
-    buffer[5] = 0x5C;
+    buffer[0] = 0xFF;
+    buffer[1] = 0xFF;
+    buffer[2] = 0xFF;
+    buffer[3] = 0xFF;
+    buffer[4] = 0xFF;
+    buffer[5] = 0xFF;
     buffer[6] = 0x00;
     buffer[7] = 0xE9;
     buffer[8] = 0x3A;
     buffer[9] = 0x25;
     buffer[10] = 0xC2;
-    buffer[11] = 0x27;
+    buffer[11] = 0x29;
     buffer[12] = 0x08;
     buffer[13] = 0x00; // ETH TYPE
     /* *************** IP FRAME **************** */
@@ -96,10 +100,10 @@ void sendUdpMessage(void)
     buffer[27] = 168; // SRC ADD
     buffer[28] = 1;// SRC ADD
     buffer[29] = 137;// SRC ADD
-    buffer[30] =  192; // DST ADD
-    buffer[31] =  168;// DST ADD
-    buffer[32] =  1;// DST ADD
-    buffer[33] =  34;// DST ADD
+    buffer[30] =  255; // DST ADD
+    buffer[31] =  255;// DST ADD
+    buffer[32] =  255;// DST ADD
+    buffer[33] =  255;// DST ADD
     /* **************** UDP FRAME ************* */
     buffer[34] =  0x2F;
     buffer[35] =  0x45;
