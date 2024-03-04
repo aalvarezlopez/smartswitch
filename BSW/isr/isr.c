@@ -10,7 +10,7 @@
 #include "io.h"
 #include "spi.h"
 #include "uart.h"
-#include "fluid_ctrl.h"
+#include "smartswitch.h"
 #include "sam4s4a.h"
 #include "component_adc.h"
 #include "component_uart.h"
@@ -24,6 +24,7 @@
 #endif
 volatile bool OS_Task_A = false;
 volatile bool OS_Task_B = false;
+volatile bool OS_Task_C = false;
 volatile bool g_interrupt_enabled = true;
 
 uint32_t system_tick_counter = 0;
@@ -151,4 +152,10 @@ void UART1_Handler( void )
  */
 void UDP_Handler(void)
 {
+}
+
+void RTC_Handler(void)
+{
+    RTC->RTC_SCCR = RTC_SCCR_TIMCLR;
+    OS_Task_C = true;
 }

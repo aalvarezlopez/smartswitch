@@ -5,6 +5,7 @@
 
 extern volatile bool OS_Task_A;
 extern volatile bool OS_Task_B;
+extern volatile bool OS_Task_C;
 
 void SystemInit( void );
 
@@ -24,7 +25,6 @@ int main(void)
         if(OS_Task_A == true){
             SPI_Task();
             SmartSwitch_Task();
-            DS18B20_Task();
             OS_Task_A = false;
         }
         if(OS_Task_B == true){
@@ -33,6 +33,12 @@ int main(void)
             TCPIP_Task();
             OS_Task_B = false;
         }
+        if(OS_Task_C == true){
+            DS18B20_Task();
+            SmartSwitch_SlowTask();
+            OS_Task_C = false;
+        }
+
     }
 
     return 0;

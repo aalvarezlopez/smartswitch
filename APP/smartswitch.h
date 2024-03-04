@@ -13,4 +13,5 @@
 
 void SmartSwitch_Init(void);
 void SmartSwitch_Task(void);
+void SmartSwitch_SlowTask(void);
 #endif

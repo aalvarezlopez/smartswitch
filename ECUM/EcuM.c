@@ -20,13 +20,16 @@ uint32_t system_tick_counter_ref = 0;
  */
 void EcuM_Startup_one(void)
 {
+    ecum_configure_peripheral_clocks();
     //ecum_configure_io_interfaces();
     ecum_configure_io_interfaces();
     ecum_configure_spi_interface();
+    ecum_configure_pwm_interface();
     #if 0
     ecum_configure_analog_input_interface();
     #endif
-    ecum_configure_peripheral_clocks();
+
+    IO_PWM_Init();
 
     DS18B20_Init();
 
@@ -48,6 +51,7 @@ void EcuM_Startup_two(void)
     Display_Init();
     SmartSwitch_Init();
     TCPIP_Init();
+    Rtc_setTimeDate(22, 2, 2, 8, 15, 20);
 }
 
 uint32_t EcuM_GetCurrentCounter(void)
@@ -99,6 +103,8 @@ void ecum_configure_io_interfaces(void)
     PIOA->PIO_PDR = PIO_PER_P4 | PIO_PER_P3;
     PIOA->PIO_PDR = PIO_PER_P11 | PIO_PER_P12;
     PIOA->PIO_PDR = PIO_PER_P13 | PIO_PER_P14;
+    PIOA->PIO_PDR = PIO_PER_P0 | PIO_PER_P1 | PIO_PER_P2 | PIO_PER_P7;
+    PIOA->PIO_MDER = PIO_PER_P0 | PIO_PER_P1 | PIO_PER_P2 | PIO_PER_P7;
 
     PIOA->PIO_ABCDSR[0] &= ~PIO_ABCDSR_P3;
     PIOA->PIO_ABCDSR[1] &= ~PIO_ABCDSR_P3;
@@ -115,14 +121,36 @@ void ecum_configure_io_interfaces(void)
 
     PIOB->PIO_WPMR = PIO_WPMR_WPKEY_PASSWD;
 
-    PIOB->PIO_PER = PIO_PER_P0 | PIO_PER_P1;
-    PIOB->PIO_OER = PIO_OER_P0 | PIO_OER_P1;
+    PIOB->PIO_PER = PIO_PER_P0 | PIO_PER_P1 |
+                    PIO_PER_P2 | PIO_PER_P3;
+    PIOB->PIO_OER = PIO_OER_P2 | PIO_OER_P3;
+    PIOB->PIO_ODR = PIO_OER_P0 | PIO_OER_P1;
 
     PIOB->PIO_WPMR = PIO_WPMR_WPEN |
                      PIO_WPMR_WPKEY_PASSWD;
 }
 
 
+void ecum_configure_pwm_interface(void)
+{
+    PIOA->PIO_WPMR = PIO_WPMR_WPKEY_PASSWD;
+
+    /* PA0 -> PWM0 PER A */
+    PIOA->PIO_ABCDSR[0] &= ~(PIO_ABCDSR_P0);
+    PIOA->PIO_ABCDSR[1] &= ~(PIO_ABCDSR_P0);
+    /* PA1 -> PWM1  PER A*/
+    PIOA->PIO_ABCDSR[0] &= ~(PIO_ABCDSR_P0);
+    PIOA->PIO_ABCDSR[1] &= ~(PIO_ABCDSR_P0);
+    /* PA2 -> PWM2  PER A*/
+    PIOA->PIO_ABCDSR[0] &= ~(PIO_ABCDSR_P0);
+    PIOA->PIO_ABCDSR[1] &= ~(PIO_ABCDSR_P0);
+    /* PA7 -> PWM3  PER B*/
+    PIOA->PIO_ABCDSR[0] |= (PIO_ABCDSR_P7);
+    PIOA->PIO_ABCDSR[1] &= ~(PIO_ABCDSR_P7);
+
+    PIOA->PIO_WPMR = PIO_WPMR_WPEN |
+                     PIO_WPMR_WPKEY_PASSWD;
+}
 /**
  * @brief configure SPI interface to communicate with the LCD
  *
@@ -220,7 +248,8 @@ void ecum_configure_peripheral_clocks(void)
     /* Unlock PMC registers*/
     PMC->PMC_WPMR = PMC_WPMR_WPKEY_PASSWD;
     PMC->PMC_PCER0 = PMC_PCER0_PID11 | PMC_PCER0_PID12 |
-                     PMC_PCER0_PID19 | PMC_PCER0_PID21;
+                     PMC_PCER0_PID19 | PMC_PCER0_PID21 |
+                     PMC_PCER0_PID31;
     /* Lock PMC registers*/
     PMC->PMC_WPMR =   PMC_WPMR_WPEN |
                       PMC_WPMR_WPKEY_PASSWD;

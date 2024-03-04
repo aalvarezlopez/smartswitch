@@ -23,6 +23,7 @@
 
 
 void IO_Init(void);
+void IO_PWM_Init(void);
 void IO_triggerNewAcquisition(void);
 bool IO_getLastAcquiredValue(uint8_t channel, uint16_t* const value );
 void IO_newAcquisitionCompleted(uint8_t channel, uint16_t value);

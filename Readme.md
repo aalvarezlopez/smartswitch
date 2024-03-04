@@ -22,6 +22,18 @@ monitor at91sam4 gpnvm set 1
 | LDR input           | PA19  | Anal. Input|
 | RAD temperature     | PA20  | IN/OUTPUT  |
 
+### RAD1 valve
+
+Normally open contactor. The output is drived by a relay.
+
+### RAD2 valve
+
+Open collector output. Output is tied to GROUND when active.
+
+### Lights
+
+Normally closed contactor. The output is drived by a realy.
+
 
 # Clock configuration
 
@@ -56,6 +68,12 @@ ADCCLK is configure to 2 MHz, which is MAINCLOCK (96 MHz) divided by 48 (PRESCAL
 + Settling time is 5 * ADCCLK = 2.5 us
 
 # Human interface
+
+## Display
+
+Display driver is SH1106. Size is 128x64 pixeles.
+
+8 pages, page width is 128 bytes (```128*8*8=8192, which is equal to 128x64```).
 
 **To be completed**
 

@@ -9,5 +9,4 @@
 #ifndef SMARTSWITCH_PRI_H
 #define SMARTSWITCH_PRI_H
 
-
 #endif

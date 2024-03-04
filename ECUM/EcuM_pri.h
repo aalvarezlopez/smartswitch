@@ -12,6 +12,7 @@
 void EcuM_Startup_one(void);
 void ecum_configure_io_interfaces(void);
 void ecum_configure_spi_interface(void);
+void ecum_configure_pwm_interface();
 void ecum_configure_uart_interface(void);
 void ecum_configure_analog_input_interface(void);
 void ecum_configure_peripheral_clocks(void);

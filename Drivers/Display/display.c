@@ -56,21 +56,80 @@ void showWelcome(void)
 {
     uint8_t data[2];
     uint8_t dout[1024];
-    gpx_putString("23/09", 48, 56);
-    gpx_putLargeDigit('1', 10, 0);
-    gpx_putLargeDigit('1', 36, 0);
+    /* Print two clock points */
     displayBuffer[1][63] = 0x3C; 
     displayBuffer[1][64] = 0x3C; 
     displayBuffer[1][65] = 0x3C;
     displayBuffer[2][63] = 0x3C; 
     displayBuffer[2][64] = 0x3C; 
     displayBuffer[2][65] = 0x3C;
+
+    gpx_putString("23/09", 48, 56);
+
+    gpx_putLargeDigit('1', 10, 0);
+    gpx_putLargeDigit('1', 36, 0);
     gpx_putLargeDigit('4', 68, 0);
     gpx_putLargeDigit('8', 94, 0);
+
     gpx_putSmallDigit('2', 2, 34);
     gpx_putSmallDigit('7', 20, 34);
     gpx_putSmallDigit('2', 94, 34);
     gpx_putSmallDigit('2', 112, 34);
+
+    Display_refresh();
+}
+
+void Display_printTime( uint8_t hour, uint8_t minutes)
+{
+    gpx_putLargeDigit('0' + hour / 10, 10, 0);
+    gpx_putLargeDigit('0' + (hour % 10), 36, 0);
+    gpx_putLargeDigit('0' + (minutes / 10), 68, 0);
+    gpx_putLargeDigit('0' + (minutes % 10), 94, 0);
+}
+
+void Display_printTemp( int16_t internal, int16_t external)
+{
+    gpx_putSmallDigit('0' + (internal / 10), 2, 34);
+    gpx_putSmallDigit('0' + (internal % 10), 20, 34);
+    gpx_putSmallDigit('0' + (external / 10), 94, 34);
+    gpx_putSmallDigit('0' + (external % 10), 112, 34);
+}
+
+void Display_printDate( uint8_t day, uint8_t month)
+{
+    char str[6];
+    str[0] = '0' + (month / 10);
+    str[1] = '0' + (month % 10);
+    str[2] = '/';
+    str[3] = '0' + (day / 10);
+    str[4] = '0' + (day % 10);
+    str[5] = 0;
+    gpx_putString(str, 48, 56);
+}
+
+void Display_printHeat( bool state )
+{
+    if( state ){
+        displayBuffer[5][48] = 0xFC; 
+        displayBuffer[5][49] = 0x00; 
+        displayBuffer[5][50] = 0xFC;
+        displayBuffer[5][51] = 0x00;
+        displayBuffer[5][52] = 0xFC;
+        displayBuffer[5][53] = 0x00;
+        displayBuffer[5][54] = 0xFC;
+    }else{
+        displayBuffer[5][48] = 0x0; 
+        displayBuffer[5][49] = 0x0; 
+        displayBuffer[5][50] = 0x0;
+        displayBuffer[5][51] = 0x0;
+        displayBuffer[5][52] = 0x0;
+        displayBuffer[5][53] = 0x0;
+        displayBuffer[5][54] = 0x0;
+    }
+}
+
+void Display_refresh(void)
+{
     for(uint8_t page = 0; page < DISPLAY_PAGES; page++){
         display_command(0xB0 + page, NULL, 0);
         display_command(0x02, NULL, 0);

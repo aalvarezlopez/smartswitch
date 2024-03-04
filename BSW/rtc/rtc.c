@@ -9,6 +9,7 @@
 #include "sam4s4a.h"
 #include "component_rtc.h"
 
+#include "rtc.h"
 
 /**
  * @brief Get time from the RTC peripheral
@@ -57,20 +58,33 @@ void Rtc_getTimeDate(uint8_t *year, uint8_t *month, uint8_t *day)
 void Rtc_setTimeDate(uint8_t year, uint8_t month, uint8_t day,
     uint8_t hour, uint8_t min, uint8_t sec)
 {
+    uint8_t year_bcd, month_bcd, day_bcd, hour_bcd, min_bcd, sec_bcd;
+    RTC->RTC_CR = RTC_CR_UPDTIM | RTC_CR_UPDCAL |
+        RTC_CR_TIMEVSEL_MINUTE;
+    RTC->RTC_IER = RTC_IER_TIMEN;
+
+    INT_TO_BCD(year, year_bcd);
+    INT_TO_BCD(month, month_bcd);
+    INT_TO_BCD(day, day_bcd);
+    INT_TO_BCD(hour, hour_bcd);
+    INT_TO_BCD(min, min_bcd);
+    INT_TO_BCD(sec, sec_bcd);
+
     RTC->RTC_CR = RTC->RTC_CR | RTC_CR_UPDTIM | RTC_CR_UPDCAL;
 
     while( (RTC->RTC_SR & RTC_SR_ACKUPD) != (RTC_SR_ACKUPD_UPDATE)){ continue; }
 
     RTC->RTC_SCCR = RTC_SCCR_ACKCLR;
 
-    RTC->RTC_TIMR = RTC_TIMR_MIN(0x12) |
-        RTC_TIMR_HOUR( 0x08 ) |
-        RTC_TIMR_SEC( 0x53);
-    RTC->RTC_CALR =  RTC_CALR_YEAR(0x22) |
-        RTC_CALR_MONTH(0x10) |
-        RTC_CALR_DATE(0x19) |
-        RTC_CALR_DAY(0x1) |
+    RTC->RTC_TIMR = RTC_TIMR_MIN(min_bcd) |
+        RTC_TIMR_HOUR(hour_bcd) |
+        RTC_TIMR_SEC(sec_bcd);
+    RTC->RTC_CALR =  RTC_CALR_YEAR(year_bcd) |
+        RTC_CALR_MONTH(month_bcd) |
+        RTC_CALR_DATE(day_bcd) |
+        RTC_CALR_DAY(1) |
         RTC_CALR_CENT(0x20);
 
     RTC->RTC_CR = RTC->RTC_CR & ~(RTC_CR_UPDTIM | RTC_CR_UPDCAL);
+    ISR_setInterruptEnable(RTC_IRQn);
 }
