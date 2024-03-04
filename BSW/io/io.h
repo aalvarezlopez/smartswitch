@@ -31,5 +31,15 @@ void IO_oneWire_Input(void);
 void IO_oneWire_Output(void);
 void IO_oneWire_Set(void);
 void IO_oneWire_Clear(void);
+void IO_openRadiatorValve(uint8_t index, bool enabled);
+void IO_getRadiatorState(bool * const state);
+void IO_setShutterPosition(uint8_t index, uint8_t position);
+void IO_getShutterPosition(uint8_t * const position);
+void IO_setDimmer(uint8_t value);
+uint8_t IO_getDimmer(void);
+bool IO_isButtonPressed(void);
+bool IO_isPIRactive(void);
+void IO_setLights(bool active);
+bool IO_getLights(void);
 
 #endif

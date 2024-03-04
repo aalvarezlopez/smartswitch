@@ -4,10 +4,24 @@ monitor at91sam4 gpnvm set 1
 
 # Hardware/Software interface
 
-| Name                | Pin   | Direction |
-|---------------------|-------|-----------|
-| AIR\_TEMP\_SENSOR   | PA16  | IN/OTUPUT |
-| DIMMER (PWM 200 Hz) | PA7   | OTUPUT    |
+| Name                | Pin   | Direction  |
+|---------------------|-------|------------|
+| FlowMeter RAD1      | PB0   | INPUT (ISR)|
+| FlowMeter RAD2      | PB1   | INPUT (ISR)|
+| RAD1 valve          | PB2   | OUTPUT     |
+| RAD2 valve          | PB3   | OUTPUT     |
+| Shutter 1 (PWM )    | PA0   | OUTPUT     |
+| Shutter 2 (PWM )    | PA1   | OUTPUT     |
+| Shutter 3 (PWM )    | PA2   | OUTPUT     |
+| Ethernet RESET      | PA6   | OUTPUT     |
+| DIMMER (PWM 200 Hz) | PA7   | OTUPUT     |
+| Touch sensor        | PA8   | INPUT (ISR)|
+| PIR switch          | PA9   | INPUT (ISR)|
+| Lights              | PA10  | OUTPUT     |
+| AIR\_TEMP\_SENSOR   | PA16  | IN/OUTPUT  |
+| LDR input           | PA19  | Anal. Input|
+| RAD temperature     | PA20  | IN/OUTPUT  |
+
 
 # Clock configuration
 

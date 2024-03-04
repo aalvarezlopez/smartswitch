@@ -89,8 +89,12 @@ void ecum_configure_io_interfaces(void)
 {
     PIOA->PIO_WPMR = PIO_WPMR_WPKEY_PASSWD;
 
-    PIOB->PIO_PER = PIO_PER_P0 | PIO_PER_P1;
-    PIOB->PIO_OER = PIO_OER_P0 | PIO_OER_P1;
+    PIOA->PIO_PER = PIO_PER_P0  | PIO_PER_P1  | PIO_PER_P2 |  PIO_PER_P6 |
+                    PIO_PER_P7  | PIO_PER_P8  | PIO_PER_P9 | PIO_PER_P10 |
+                    PIO_PER_P20;
+
+    PIOA->PIO_OER = PIO_PER_P0  | PIO_PER_P1  | PIO_PER_P2  | PIO_PER_P6 |
+                    PIO_PER_P7  | PIO_PER_P10 | PIO_PER_P19;
 
     PIOA->PIO_PDR = PIO_PER_P4 | PIO_PER_P3;
     PIOA->PIO_PDR = PIO_PER_P11 | PIO_PER_P12;
@@ -102,8 +106,19 @@ void ecum_configure_io_interfaces(void)
     PIOA->PIO_ABCDSR[0] &= ~PIO_ABCDSR_P4;
     PIOA->PIO_ABCDSR[1] &= ~PIO_ABCDSR_P4;
 
+    PIOA->PIO_CODR = PIO_CODR_P0  | PIO_CODR_P1  | PIO_CODR_P2  | PIO_CODR_P6 |
+                     PIO_CODR_P7  | PIO_CODR_P10 | PIO_CODR_P19;
+    PIOA->PIO_SODR = PIO_SODR_P6;
 
     PIOA->PIO_WPMR = PIO_WPMR_WPEN |
+                     PIO_WPMR_WPKEY_PASSWD;
+
+    PIOB->PIO_WPMR = PIO_WPMR_WPKEY_PASSWD;
+
+    PIOB->PIO_PER = PIO_PER_P0 | PIO_PER_P1;
+    PIOB->PIO_OER = PIO_OER_P0 | PIO_OER_P1;
+
+    PIOB->PIO_WPMR = PIO_WPMR_WPEN |
                      PIO_WPMR_WPKEY_PASSWD;
 }
 
