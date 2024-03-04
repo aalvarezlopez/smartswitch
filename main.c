@@ -23,7 +23,7 @@ int main(void)
     while (true) {
         if(OS_Task_A == true){
             SPI_Task();
-            FluidCtrl_Task();
+            SmartSwitch_Task();
             DS18B20_Task();
             OS_Task_A = false;
         }

@@ -4,7 +4,7 @@
 #include "sam4s4a.h"
 #include "component_pio.h"
 #include "spi.h"
-#include "fluid_ctrl.h"
+#include "smartswitch.h"
 #include "isr.h"
 #include "display.h"
 #include "enc28j60.h"
@@ -46,7 +46,7 @@ void EcuM_Startup_two(void)
 
     ENC_Init();
     Display_Init();
-    FluidCtrl_Init();
+    SmartSwitch_Init();
     TCPIP_Init();
 }
 

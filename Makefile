@@ -3,7 +3,7 @@ LD = /opt/gcc-arm-none-eabi/bin/arm-none-eabi-ld
 
 UNIT_TEST_REPORT := ./unit_test_report.txt
 
-TESTSRC := ./APP/utest_fluid_ctrl.c
+TESTSRC := ./APP/utest_smartswitch.c
 TESTOBJ := $(TESTSRC:%.c=%.o)
 
 SRCS := ./main.c
@@ -18,7 +18,7 @@ SRCS += ./Drivers/DS18B20/ds18b20.c ./Drivers/DS18B20/ds18b20_ll.c
 SRCS += ./Drivers/Display/display.c
 SRCS += ./Drivers/Enc/enc28j60.c
 SRCS += $(wildcard ./cmsis/*.c)
-SRCS += ./APP/fluid_ctrl.c
+SRCS += ./APP/smartswitch.c
 SRCS += ./misc/str.c
 SRCS += ./misc/delays.c
 SRCS += ./misc/graphics.c

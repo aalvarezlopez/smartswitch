@@ -41,7 +41,7 @@ void getUdpFrame(const uint8_t * buffer)
     dstport <<= 8;
     dstport |= buffer[23];
     if( dstport == 12101 ) {
-        FluidCtrl_newFrame(buffer+24);
+        SmartSwitch_newFrame(buffer+24);
     }
 }
 
