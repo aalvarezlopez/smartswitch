@@ -15,6 +15,8 @@
 #include "io.h"
 #include "str.h"
 
+bool smartswitch_roomActive = false;
+
 void SmartSwitch_Init(void)
 {
 }
@@ -22,6 +24,7 @@ void SmartSwitch_Init(void)
 
 void SmartSwitch_Task(void)
 {
+    smartswitch_roomActive = IO_isPIRactive();
 }
 
 void FluidCtr_cdc_byte_ready(uint8_t port)

@@ -158,12 +158,12 @@ uint8_t IO_getDimmer(void)
 
 bool IO_isButtonPressed(void)
 {
-    return PIOA->PIO_ODSR & PIO_ODSR_P8;
+    return PIOA->PIO_PDSR & PIO_PDSR_P8;
 }
 
 bool IO_isPIRactive(void)
 {
-    return PIOA->PIO_ODSR & PIO_ODSR_P9;
+    return PIOA->PIO_PDSR & PIO_PDSR_P9;
 }
 
 void IO_setLights(bool active)
