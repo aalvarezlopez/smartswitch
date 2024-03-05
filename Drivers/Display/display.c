@@ -87,7 +87,7 @@ void Display_printTime( uint8_t hour, uint8_t minutes)
     gpx_putLargeDigit('0' + (minutes % 10), 94, 0);
 }
 
-void Display_printTemp( int16_t internal, int16_t external)
+void Display_printTemp( int16_t internal, int16_t target)
 {
     gpx_putSmallDigit('0' + (internal / 10), 2, 34);
     gpx_putSmallDigit('0' + (internal % 10), 20, 34);
