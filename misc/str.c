@@ -146,3 +146,26 @@ long atol(const char *num)
     value = neg ? -value : value;
     return value;
 }
+
+void int_to_str(char * dst, uint16_t number, uint8_t leading)
+{
+    uint8_t count = 0;
+    uint8_t digit[6];
+    uint8_t offset;
+    while( number > 0 ){
+        digit[count] = '0' + number % 10;
+        number /= 10;
+        count++;
+    }
+    if( leading > count ){
+        for( uint8_t i = 0; i < (leading - count); i++){
+            *(dst + i) = '0';
+        }
+        offset = leading - count;
+    }else{
+        offset = 0;
+    }
+    for(uint8_t i = 0; i < count; i++){
+        *(dst + i + offset) = digit[count - i - 1];
+    }
+}

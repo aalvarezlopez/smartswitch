@@ -91,8 +91,8 @@ void Display_printTemp( int16_t internal, int16_t target)
 {
     gpx_putSmallDigit('0' + (internal / 10), 2, 34);
     gpx_putSmallDigit('0' + (internal % 10), 20, 34);
-    gpx_putSmallDigit('0' + (external / 10), 94, 34);
-    gpx_putSmallDigit('0' + (external % 10), 112, 34);
+    gpx_putSmallDigit('0' + (target / 10), 94, 34);
+    gpx_putSmallDigit('0' + (target % 10), 112, 34);
 }
 
 void Display_printDate( uint8_t day, uint8_t month)

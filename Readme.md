@@ -73,11 +73,26 @@ ADCCLK is configure to 2 MHz, which is MAINCLOCK (96 MHz) divided by 48 (PRESCAL
 
 Display driver is SH1106. Size is 128x64 pixeles.
 
-8 pages, page width is 128 bytes (```128*8*8=8192, which is equal to 128x64```).
+8 pages, page width is 128 bytes (*128x8x8=8192, which is equal to 128x64*).
 
-**To be completed**
 
-# ToDo
+## Coms
+
+Udp message. Periodically the device broadcast status message: 
+
+[HH:MM:SS]{TEMP: x,
+RAD=ON/OFF,
+LIGHTS=ON/OFF,
+SHUTTER:x;y;z}
+
+Device will accept these commands:
+
+LIGHT:ON
+LIGHT:OFF
+TTARGET:27
+SHUTTER:76
+STATUS
+DATE:YY/MM/DD/HH/MM/SS
 
 
 # Flash and debug

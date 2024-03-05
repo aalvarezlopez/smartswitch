@@ -12,5 +12,6 @@
 #define STR_N_DIGITS 3
 
 void __atoi(uint16_t n, char *s);
+void int_to_str(char * dst, uint16_t number, uint8_t leading);
 
 #endif

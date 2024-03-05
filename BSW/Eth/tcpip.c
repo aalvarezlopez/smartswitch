@@ -7,17 +7,24 @@
 #define ETH_PROTOCOL_UDP 17
 
 bool linkup = false;
+uint32_t ipv4_id = 0x1489;
 
 void TCPIP_Init(void)
 {
+    char ip[] = {192, 168, 1, 1};
+    ARP_sendrequest(ip);
+    ip[3] = 33;
+    ARP_sendrequest(ip);
 }
 
 void TCPIP_Task(void)
 {
-    static uint8_t counter = 0;
+    static uint32_t counter = 0;
     counter++;
-    if(counter > 50){
-        sendUdpMessage();
+    if(counter > 100){
+        char msg[256];
+        SmartSwitch_broadcastMessage(msg);
+        broadcastUdpMessage(msg, strlen(msg)+1, 12101, 54134);
         counter = 0;
     }
     linkup = isLinkUp();
@@ -40,85 +47,158 @@ void getUdpFrame(const uint8_t * buffer)
     dstport = buffer[22];
     dstport <<= 8;
     dstport |= buffer[23];
-    if( dstport == 12101 ) {
-        SmartSwitch_newFrame(buffer+24);
+    if( dstport == 54134 ) {
+        char rply[256];
+        SmartSwitch_newFrame(buffer+28, rply);
+        sendUdpMessage(33, rply, strlen(rply)+1, 12101, 54134);
     }
 }
 
-void fill_checksum(uint8_t dest, uint8_t off, uint16_t len,uint8_t type)
+uint16_t chksum(uint16_t sum, const uint8_t *data, uint16_t len)
 {
-    #if 0
-    const uint8_t* ptr = buffer + off;
-    uint32_t sum = type==1 ? IP_PROTO_UDP_V+len-8 :
-        type==2 ? IP_PROTO_TCP_V+len-8 : 0;
-    while(len >1) {
-        sum += (uint16_t) (((uint32_t)*ptr<<8)|*(ptr+1));
-        ptr+=2;
-        len-=2;
+  uint16_t t;
+  const uint8_t *dataptr;
+  const uint8_t *last_byte;
+
+  dataptr = data;
+  last_byte = data + len - 1;
+
+  while(dataptr < last_byte) {
+    t = (dataptr[0] << 8) + dataptr[1];
+    sum += t;
+    if(sum < t) {
+      sum++;
     }
-    if (len)
-        sum += ((uint32_t)*ptr)<<8;
-    while (sum>>16)
-        sum = (uint16_t) sum + (sum >> 16);
-    uint16_t ck = ~ (uint16_t) sum;
-    buffer[dest] = ck>>8;
-    buffer[dest+1] = ck;
-    #endif
+    dataptr += 2;
+  }
+
+  if(dataptr == last_byte) {
+    t = (dataptr[0] << 8) + 0;
+    sum += t;
+    if(sum < t) {
+      sum++;
+    }
+  }
+
+  return sum;
 }
 
-void sendUdpMessage(void)
+void sendUdpMessage(uint8_t ip, uint8_t *msg, uint16_t len, uint16_t dstprt, uint16_t srcprt)
 {
-    uint8_t buffer[64];
-    buffer[0] = 0xFF;
-    buffer[1] = 0xFF;
-    buffer[2] = 0xFF;
-    buffer[3] = 0xFF;
-    buffer[4] = 0xFF;
-    buffer[5] = 0xFF;
-    buffer[6] = 0x00;
-    buffer[7] = 0xE9;
-    buffer[8] = 0x3A;
-    buffer[9] = 0x25;
-    buffer[10] = 0xC2;
-    buffer[11] = 0x29;
+    uint16_t crc;
+    uint8_t buffer[512];
+    uint8_t pseudo_header[12];
+    uint16_t total_length = 20 + 8 + len;
+    uint16_t udp_length = 8 + len;
+    /* DST MAC */
+    buffer[0] = 0x48; buffer[1] = 0xBA; buffer[2] = 0x4E;
+    buffer[3] = 0xAF; buffer[4] = 0x87; buffer[5] = 0x5c;
+    /* SRC MAC */
+    buffer[6] = 0x00; buffer[7]  = 0xE9; buffer[8]  = 0x3A;
+    buffer[9] = 0x25; buffer[10] = 0xC2; buffer[11] = 0x29;
+    /* ETH TYPE - IPv4 */
     buffer[12] = 0x08;
-    buffer[13] = 0x00; // ETH TYPE
+    buffer[13] = 0x00;
     /* *************** IP FRAME **************** */
-    buffer[14] = 0x45; //VERSION | IHL
-    buffer[15] = 0x00;    // TOS
-    buffer[16] = 0x00; // TOTAL LENGTH
-    buffer[17] = 0x21;
-    buffer[18] = 0xD8; // IDENTIFICATION
-    buffer[19] = 0x01;
-    buffer[20] = 0x40;  // FLAGS | FRAGMENT OFFSET
-    buffer[21] = 0x00; // FRAGMENT OFFSET
-    buffer[22] = 0x40; // TTL
-    buffer[23] = 17;   // PROTOCOL
-    buffer[24] = 0xDE; // HEADER CHKS
-    buffer[25] =  0xCE;// HEADER CHKS
-    buffer[26] = 192;  // SRC ADD
-    buffer[27] = 168; // SRC ADD
-    buffer[28] = 1;// SRC ADD
-    buffer[29] = 137;// SRC ADD
-    buffer[30] =  255; // DST ADD
-    buffer[31] =  255;// DST ADD
-    buffer[32] =  255;// DST ADD
-    buffer[33] =  255;// DST ADD
+    /* VERSION | IHL | TOS */
+    buffer[14] = 0x45; buffer[15] = 0x00;
+    /* TOTAL LENGTH */
+    buffer[16] = total_length >> 8; buffer[17] = (total_length & 0xFF);
+    /* UNIQUE ID */
+    buffer[18] = ipv4_id >> 8;
+    buffer[19] = ipv4_id & 0xFF;
+    /* FLAGS | FRAGMENT OFFSET | TTL | PROTOCOL (UDP) */
+    buffer[20] = 0x40; buffer[21] = 0x00; buffer[22] = 0x40; buffer[23] = 17;
+    /* HEADER CHECKSUM */
+    buffer[24] = 0x00;
+    buffer[25] = 0x00;
+    /* SRC ADDRESS */
+    buffer[26] = 192; buffer[27] = 168; buffer[28] = 1; buffer[29] = 137;
+    /* DST ADDRESS */
+    buffer[30] = 192; buffer[31] = 168; buffer[32] = 1; buffer[33] = ip;
     /* **************** UDP FRAME ************* */
-    buffer[34] =  0x2F;
-    buffer[35] =  0x45;
-    buffer[36] = 0xD3;
-    buffer[37] = 0x76;
-    buffer[38] = 0x00; // LENGTH
-    buffer[39] =  0x0D; // LENGTH
-    buffer[40] = 0x0E; // CRC
-    buffer[41] =  0x78;  // CRC
+    buffer[34] = srcprt >> 8; buffer[35] = srcprt & 0xFF;
+    buffer[36] = dstprt >> 8; buffer[37] = dstprt & 0xFF;
+    buffer[38] = (udp_length) >> 8;
+    buffer[39] = (udp_length) & 0xFF;
+    /* CRC */
+    buffer[40] = 0x00; buffer[41] = 0x00;
     /*** MSG ****/
-    buffer[42] =  'J';
-    buffer[43] =  'U';
-    buffer[44] =  'A';
-    buffer[45] =  'N';
-    buffer[46] =  0xa;
-    buffer[47] =  0;
-    packetSend(47, buffer);
+    memcpy( buffer + 42, msg, len);
+    crc =  chksum( 0, buffer + 14, 20);
+    crc = ~crc;
+    buffer[24] = crc >> 8;
+    buffer[25] = crc & 0xFF;
+
+    memcpy(pseudo_header, buffer + 26, 8);
+    pseudo_header[8] = 0; pseudo_header[9] = 0x11;
+    pseudo_header[10] = (udp_length >> 8); pseudo_header[11] = (udp_length) & 0xFF;
+    crc =  chksum( 0, pseudo_header, 12);
+    crc =  chksum( crc, buffer + 34, 8 + len);
+    crc = ~crc;
+    buffer[40] = crc >> 8;
+    buffer[41] = crc & 0xFF;
+    packetSend(42 + len, buffer);
+
+    ipv4_id = ipv4_id + len;
+}
+
+void broadcastUdpMessage(uint8_t *msg, uint16_t len, uint16_t dstprt, uint16_t srcprt)
+{
+    uint16_t crc;
+    uint8_t buffer[512];
+    uint8_t pseudo_header[12];
+    uint16_t total_length = 20 + 8 + len;
+    uint16_t udp_length = 8 + len;
+    /* DST MAC */
+    buffer[0] = 0xFF; buffer[1] = 0xFF; buffer[2] = 0xFF;
+    buffer[3] = 0xFF; buffer[4] = 0xFF; buffer[5] = 0xFF;
+    /* SRC MAC */
+    buffer[6] = 0x00; buffer[7]  = 0xE9; buffer[8]  = 0x3A;
+    buffer[9] = 0x25; buffer[10] = 0xC2; buffer[11] = 0x29;
+    /* ETH TYPE - IPv4 */
+    buffer[12] = 0x08;
+    buffer[13] = 0x00;
+    /* *************** IP FRAME **************** */
+    /* VERSION | IHL | TOS */
+    buffer[14] = 0x45; buffer[15] = 0x00;
+    /* TOTAL LENGTH */
+    buffer[16] = total_length >> 8; buffer[17] = (total_length & 0xFF);
+    /* UNIQUE ID */
+    buffer[18] = ipv4_id >> 8;
+    buffer[19] = ipv4_id & 0xFF;
+    /* FLAGS | FRAGMENT OFFSET | TTL | PROTOCOL (UDP) */
+    buffer[20] = 0x40; buffer[21] = 0x00; buffer[22] = 0x40; buffer[23] = 17;
+    /* HEADER CHECKSUM */
+    buffer[24] = 0x00;
+    buffer[25] = 0x00;
+    /* SRC ADDRESS */
+    buffer[26] = 192; buffer[27] = 168; buffer[28] = 1; buffer[29] = 137;
+    /* DST ADDRESS */
+    buffer[30] = 255; buffer[31] = 255; buffer[32] = 255; buffer[33] = 255;
+    /* **************** UDP FRAME ************* */
+    buffer[34] = srcprt >> 8; buffer[35] = srcprt & 0xFF;
+    buffer[36] = dstprt >> 8; buffer[37] = dstprt & 0xFF;
+    buffer[38] = (udp_length) >> 8;
+    buffer[39] = (udp_length) & 0xFF;
+    /* CRC */
+    buffer[40] = 0x00; buffer[41] = 0x00;
+    /*** MSG ****/
+    memcpy( buffer + 42, msg, len);
+    crc =  chksum( 0, buffer + 14, 20);
+    crc = ~crc;
+    buffer[24] = crc >> 8;
+    buffer[25] = crc & 0xFF;
+
+    memcpy(pseudo_header, buffer + 26, 8);
+    pseudo_header[8] = 0; pseudo_header[9] = 0x11;
+    pseudo_header[10] = (udp_length >> 8); pseudo_header[11] = (udp_length) & 0xFF;
+    crc =  chksum( 0, pseudo_header, 12);
+    crc =  chksum( crc, buffer + 34, 8 + len);
+    crc = ~crc;
+    buffer[40] = crc >> 8;
+    buffer[41] = crc & 0xFF;
+    packetSend(42 + len, buffer);
+
+    ipv4_id = ipv4_id + len;
 }

@@ -9,6 +9,7 @@ uint16_t lastMsgType;
 uint32_t g_stats_nRxFrames = 0;
 
 #define ETH_TYPE_TCPIP 0x0800
+#define ETH_TYPE_ARP   0x0806
 
 void ethercard_parse(void);
 
@@ -31,6 +32,14 @@ void ethercard_parse(void)
 
     if( lastMsgType == ETH_TYPE_TCPIP ){
         TCPIP_newmessage(ethmessage + 14);
+    }
+    if( lastMsgType == ETH_TYPE_ARP ){
+        if( ethmessage[38] == 192 &&
+            ethmessage[39] == 168 &&
+            ethmessage[40] == 1 &&
+            ethmessage[41] == 137){
+            ARP_sendreplyrouter(ethmessage+28, ethmessage+22);
+        }
     }
     g_stats_nRxFrames++;
     if( g_stats_nRxFrames > 65500){

@@ -168,7 +168,7 @@ void initialize (void)
     writeReg(ETXST, TXSTART_INIT);
     writeReg(ETXND, TXSTOP_INIT);
     writePhy(PHLCON, 0x476);
-    #if 1
+    #if 0
     // Rx filter: only unicast messages
     writeRegByte(ERXFCON, ERXFCON_UCEN | ERXFCON_ANDOR);
     #else
