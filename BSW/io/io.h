@@ -21,6 +21,13 @@
 #define CH4_ADC_OFFSET 0u
 #define IO_RAW_TO_VOLTS(x) ((x * CH4_ADC_FACTOR) + CH4_ADC_OFFSET)
 
+#define PIOA_ISR_BUTTON_ST(value)      ((value & PIO_ISR_P8)  != 0)
+#define PIOA_ISR_PIR_ST(value)         ((value & PIO_ISR_P9)  != 0)
+
+#define PIOB_ISR_Q1_ST(value)          ((value & PIO_ISR_P0)  != 0)
+#define PIOB_ISR_Q2_ST(value)          ((value & PIO_ISR_P1)  != 0)
+
+
 
 void IO_Init(void);
 void IO_PWM_Init(void);

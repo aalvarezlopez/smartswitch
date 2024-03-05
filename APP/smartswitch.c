@@ -16,6 +16,7 @@
 #include "str.h"
 
 bool smartswitch_roomActive = false;
+uint16_t radiatior_q[2] = {0, 0};
 
 extern uint32_t temp_01;
 
@@ -23,7 +24,8 @@ void SmartSwitch_Init(void)
 {
     IO_openRadiatorValve(0, false);
     IO_openRadiatorValve(1, false);
-    IO_setLights(true);
+    IO_setLights(false);
+    IO_setDimmer(0);
 }
 
 
@@ -55,8 +57,26 @@ void SmartSwitch_SlowTask(void)
     IO_openRadiatorValve(1, false);
 }
 
-void FluidCtr_cdc_byte_ready(uint8_t port)
+void SmartSwitch_Action(bool presence,bool button)
 {
+    if( presence ){
+        IO_setDimmer(20);
+    }else{
+        IO_setDimmer(0);
+    }
+    if( button ){
+        IO_setLights(true);
+    }
+}
+
+void SmartSwitch_flowMeter(bool q1, bool q2)
+{
+    if( q1 == false){
+        radiatior_q[0]++;
+    }
+    if( q2 == false){
+        radiatior_q[1]++;
+    }
 }
 
 void SmartSwitch_newFrame(const uint8_t * msg)

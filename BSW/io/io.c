@@ -45,10 +45,10 @@ void IO_PWM_Init(void)
     PWM->PWM_CLK = PWM_CLK_PREA(10) | PWM_CLK_PREB(10) | PWM_CLK_PREA(1) | PWM_CLK_PREB(1);
 
     /* 48 MHz / 512 = 9.375 kHz */
-    PWM->PWM_CH_NUM[0].PWM_CMR = PWM_CMR_CPRE_MCK_DIV_512;
-    PWM->PWM_CH_NUM[1].PWM_CMR = PWM_CMR_CPRE_MCK_DIV_512;
-    PWM->PWM_CH_NUM[2].PWM_CMR = PWM_CMR_CPRE_MCK_DIV_512;
-    PWM->PWM_CH_NUM[3].PWM_CMR = PWM_CMR_CPRE_MCK_DIV_512;
+    PWM->PWM_CH_NUM[0].PWM_CMR = PWM_CMR_CPRE_MCK_DIV_512 | PWM_CMR_CPOL;
+    PWM->PWM_CH_NUM[1].PWM_CMR = PWM_CMR_CPRE_MCK_DIV_512 | PWM_CMR_CPOL;
+    PWM->PWM_CH_NUM[2].PWM_CMR = PWM_CMR_CPRE_MCK_DIV_512 | PWM_CMR_CPOL;
+    PWM->PWM_CH_NUM[3].PWM_CMR = PWM_CMR_CPRE_MCK_DIV_512 | PWM_CMR_CPOL;
 
     /* 9375 / 200 = 468 ----> 200 HZ */
     PWM->PWM_CH_NUM[0].PWM_CPRD = 468;
@@ -56,17 +56,18 @@ void IO_PWM_Init(void)
     PWM->PWM_CH_NUM[2].PWM_CPRD = 468;
     PWM->PWM_CH_NUM[3].PWM_CPRD = 468;
 
-    PWM->PWM_CH_NUM[0].PWM_CDTY = 300;
-    PWM->PWM_CH_NUM[1].PWM_CDTY = 300;
-    PWM->PWM_CH_NUM[2].PWM_CDTY = 300;
-    PWM->PWM_CH_NUM[3].PWM_CDTY = 300;
+    PWM->PWM_CH_NUM[0].PWM_CDTY = 0;
+    PWM->PWM_CH_NUM[1].PWM_CDTY = 0;
+    PWM->PWM_CH_NUM[2].PWM_CDTY = 0;
+    PWM->PWM_CH_NUM[3].PWM_CDTY = 0;
 
     PWM->PWM_ENA = PWM_ENA_CHID0 |
                    PWM_ENA_CHID1 |
                    PWM_ENA_CHID2 |
                    PWM_ENA_CHID3;
 
-    PWM->PWM_WPCR = PWM_WPCR_WPCMD_DISABLE_SW_PROT | PWM_WPCR_WPKEY_PASSWD;
+    PWM->PWM_WPCR = PWM_WPCR_WPCMD_ENABLE_SW_PROT | PWM_WPCR_WPKEY_PASSWD | PWM_WPCR_WPRG0 |
+                    PWM_WPCR_WPRG1 | PWM_WPCR_WPRG2 | PWM_WPCR_WPRG3;
 }
 
 bool IO_oneWire_Read(void)
@@ -170,26 +171,39 @@ void IO_getRadiatorState(bool * const state)
 
 void IO_setShutterPosition(uint8_t index, uint8_t position)
 {
+    PWM->PWM_CH_NUM[index].PWM_CDTYUPD = (position * 468) / 100;
 }
 
 void IO_getShutterPosition(uint8_t * const position)
 {
-    position[0] = 0;
-    position[1] = 0;
-    position[2] = 0;
+    position[0] = (PWM->PWM_CH_NUM[0].PWM_CDTY * 100) / 468 ;
+    position[1] = (PWM->PWM_CH_NUM[1].PWM_CDTY * 100) / 468 ;
+    position[2] = (PWM->PWM_CH_NUM[2].PWM_CDTY * 100) / 468 ;
 }
 
 void IO_setDimmer(uint8_t value)
 {
+    PWM->PWM_CH_NUM[3].PWM_CDTYUPD = (value * 468) / 100;
 }
 
 uint8_t IO_getDimmer(void)
 {
+    return (PWM->PWM_CH_NUM[3].PWM_CDTY * 100) / 468 ;
 }
 
 bool IO_isButtonPressed(void)
 {
     return PIOA->PIO_PDSR & PIO_PDSR_P8;
+}
+
+bool IO_q1(void)
+{
+    return PIOB->PIO_PDSR & PIO_PDSR_P0;
+}
+
+bool IO_q2(void)
+{
+    return PIOB->PIO_PDSR & PIO_PDSR_P1;
 }
 
 bool IO_isPIRactive(void)

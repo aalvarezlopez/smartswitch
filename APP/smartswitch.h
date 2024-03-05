@@ -14,4 +14,6 @@
 void SmartSwitch_Init(void);
 void SmartSwitch_Task(void);
 void SmartSwitch_SlowTask(void);
+void SmartSwitch_Action(bool presence,bool button);
+void SmartSwitch_flowMeter(bool q1, bool q2);
 #endif

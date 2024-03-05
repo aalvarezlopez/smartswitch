@@ -116,12 +116,25 @@ void SysTick_Handler( void )
     system_tick_counter++;
 }
 
+void PIOB_Handler(void)
+{
+    PIOB_ISR_Q1_ST( PIOB->PIO_ISR );
+    PIOB_ISR_Q2_ST( PIOB->PIO_ISR );
+    SmartSwitch_flowMeter(IO_q1(), IO_q2());
+}
 
 /**
  * @brief PIOA interruption handler
  */
 void PIOA_Handler(void)
 {
+    bool presence, button;
+    PIOA_ISR_BUTTON_ST( PIOA->PIO_ISR );
+    PIOA_ISR_PIR_ST( PIOA->PIO_ISR );
+
+    presence = IO_isPIRactive();
+    button = IO_isButtonPressed();
+    SmartSwitch_Action(presence, button);
 }
 
 

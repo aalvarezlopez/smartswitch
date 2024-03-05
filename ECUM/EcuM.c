@@ -21,7 +21,6 @@ uint32_t system_tick_counter_ref = 0;
 void EcuM_Startup_one(void)
 {
     ecum_configure_peripheral_clocks();
-    //ecum_configure_io_interfaces();
     ecum_configure_io_interfaces();
     ecum_configure_spi_interface();
     ecum_configure_pwm_interface();
@@ -52,6 +51,9 @@ void EcuM_Startup_two(void)
     SmartSwitch_Init();
     TCPIP_Init();
     Rtc_setTimeDate(22, 2, 2, 8, 15, 20);
+
+    ISR_setInterruptEnable( PIOA_IRQn, true);
+    ISR_setInterruptEnable( PIOB_IRQn, true);
 }
 
 uint32_t EcuM_GetCurrentCounter(void)
@@ -116,6 +118,11 @@ void ecum_configure_io_interfaces(void)
                      PIO_CODR_P7  | PIO_CODR_P10 | PIO_CODR_P19;
     PIOA->PIO_SODR = PIO_SODR_P6;
 
+    PIOA->PIO_IER    = PIO_IER_P9 | PIO_IER_P8;
+    PIOA->PIO_PUER   = PIO_PUER_P9 | PIO_PUER_P8;
+    PIOA->PIO_IFER   = PIO_IFSR_P9 | PIO_IFSR_P8;
+    PIOA->PIO_IFSCER = PIO_IFSCDR_P9 | PIO_IFSCDR_P8;
+
     PIOA->PIO_WPMR = PIO_WPMR_WPEN |
                      PIO_WPMR_WPKEY_PASSWD;
 
@@ -124,7 +131,12 @@ void ecum_configure_io_interfaces(void)
     PIOB->PIO_PER = PIO_PER_P0 | PIO_PER_P1 |
                     PIO_PER_P2 | PIO_PER_P3;
     PIOB->PIO_OER = PIO_OER_P2 | PIO_OER_P3;
-    PIOB->PIO_ODR = PIO_OER_P0 | PIO_OER_P1;
+    PIOB->PIO_ODR = PIO_ODR_P0 | PIO_ODR_P1;
+
+    PIOB->PIO_IER    = PIO_IER_P0    | PIO_IER_P1;
+    PIOB->PIO_PUER   = PIO_PUER_P0   | PIO_PUER_P1;
+    PIOB->PIO_IFER   = PIO_IFSR_P0   | PIO_IFSR_P1;
+    PIOB->PIO_IFSCER = PIO_IFSCDR_P0 | PIO_IFSCDR_P1;
 
     PIOB->PIO_WPMR = PIO_WPMR_WPEN |
                      PIO_WPMR_WPKEY_PASSWD;
