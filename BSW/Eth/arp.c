@@ -3,6 +3,15 @@
 #include "EtherCard.h"
 #include "arp.h"
 
+typedef struct ethernetdevice_s{
+    uint8_t mac[6];
+    uint8_t ip[4];
+} ethernetdevice_st;
+
+#define ARPTABLE_LEN 10u
+ethernetdevice_st arptable[ARPTABLE_LEN];
+uint8_t arptable_entries = 0;
+
 void ARP_sendrequest(char * ip)
 {
     uint8_t buffer[64];
@@ -55,6 +64,15 @@ void ARP_sendrequest(char * ip)
 void ARP_sendreplyrouter(char * originip, char * originmac)
 {
     uint8_t buffer[64];
+    if( arptable_entries < ARPTABLE_LEN ){
+        for(uint8_t i = 0; i < 6; i++){
+            arptable[arptable_entries].mac[i] = originmac[i];
+        }
+        for(uint8_t i = 0; i < 4; i++){
+            arptable[arptable_entries].ip[i] = originip[i];
+        }
+        arptable_entries++;
+    }
     buffer[0] = originmac[0];
     buffer[1] = originmac[1];
     buffer[2] = originmac[2];
@@ -99,4 +117,15 @@ void ARP_sendreplyrouter(char * originip, char * originmac)
     buffer[40] = originip[2];
     buffer[41] = originip[3];
     packetSend(42, buffer);
+}
+
+bool arp_isResolved(uint8_t ip)
+{
+    bool result = false;
+    for( uint8_t i = 0; i < arptable_entries; i++){
+        if( arptable[i].ip[3] == ip ){
+            result = true;
+        }
+    }
+    return result;
 }

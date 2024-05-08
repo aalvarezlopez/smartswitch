@@ -49,5 +49,7 @@ bool IO_isButtonPressed(void);
 bool IO_isPIRactive(void);
 void IO_setLights(bool active);
 bool IO_getLights(void);
+void ADC_Task(void);
+bool IO_adcIsReady(void);
 
 #endif

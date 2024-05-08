@@ -20,7 +20,7 @@
 #define _STATIC static
 #endif
 
-#define N_ADC_CHANNELS 1u
+#define N_ADC_CHANNELS 16u
 
 _STATIC bool updatedChannel[N_ADC_CHANNELS];
 
@@ -145,6 +145,28 @@ bool IO_getLastAcquiredValue(uint8_t channel, uint16_t* const value )
     ISR_enableAllInterrupts();
     return updated;
 }
+
+/**
+ * @brief A-D conversor is ready and capable of starting new
+ * transmission if required.
+ */
+bool IO_adcIsReady(void)
+{
+    return (ADC->ADC_ISR & ADC_ISR_DRDY) == 0;
+}
+
+
+/**
+ * @brief ADC main tasks. Diagnostics and trigger new acquisition when 
+ * required
+ */
+void ADC_Task(void)
+{
+    if( IO_adcIsReady() ){
+        IO_triggerNewAcquisition();
+    }
+}
+
 
 void IO_openRadiatorValve(uint8_t index, bool enabled)
 {

@@ -13,8 +13,6 @@ void TCPIP_Init(void)
 {
     char ip[] = {192, 168, 1, 1};
     ARP_sendrequest(ip);
-    ip[3] = 33;
-    ARP_sendrequest(ip);
 }
 
 void TCPIP_Task(void)
@@ -25,6 +23,15 @@ void TCPIP_Task(void)
         char msg[256];
         SmartSwitch_broadcastMessage(msg);
         broadcastUdpMessage(msg, strlen(msg)+1, 12101, 54134);
+        if( !arp_isResolved(254)){
+            char ip[] = {192, 168, 1, 254};
+            ARP_sendrequest(ip);
+        }
+        if( !arp_isResolved(1)){
+            char ip[] = {192, 168, 1, 1};
+            ARP_sendrequest(ip);
+        }
+        counter = 0;
         counter = 0;
     }
     linkup = isLinkUp();
@@ -50,7 +57,7 @@ void getUdpFrame(const uint8_t * buffer)
     if( dstport == 54134 ) {
         char rply[256];
         SmartSwitch_newFrame(buffer+28, rply);
-        sendUdpMessage(33, rply, strlen(rply)+1, 12101, 54134);
+        sendUdpMessage(254, rply, strlen(rply)+1, 12101, 54134);
     }
 }
 
@@ -91,8 +98,8 @@ void sendUdpMessage(uint8_t ip, uint8_t *msg, uint16_t len, uint16_t dstprt, uin
     uint16_t total_length = 20 + 8 + len;
     uint16_t udp_length = 8 + len;
     /* DST MAC */
-    buffer[0] = 0x48; buffer[1] = 0xBA; buffer[2] = 0x4E;
-    buffer[3] = 0xAF; buffer[4] = 0x87; buffer[5] = 0x5c;
+    buffer[0] = 0x5e; buffer[1] = 0x02; buffer[2] = 0x0d;
+    buffer[3] = 0x36; buffer[4] = 0x4c; buffer[5] = 0xe6;
     /* SRC MAC */
     buffer[6] = 0x00; buffer[7]  = 0xE9; buffer[8]  = 0x3A;
     buffer[9] = 0x25; buffer[10] = 0xC2; buffer[11] = 0x29;

@@ -24,9 +24,7 @@ void EcuM_Startup_one(void)
     ecum_configure_io_interfaces();
     ecum_configure_spi_interface();
     ecum_configure_pwm_interface();
-    #if 0
     ecum_configure_analog_input_interface();
-    #endif
 
     IO_PWM_Init();
 
@@ -52,6 +50,7 @@ void EcuM_Startup_two(void)
     TCPIP_Init();
     Rtc_setTimeDate(22, 2, 2, 8, 15, 20);
 
+    ISR_setInterruptEnable( ADC_IRQn, true);
     ISR_setInterruptEnable( PIOA_IRQn, true);
     ISR_setInterruptEnable( PIOB_IRQn, true);
 }
@@ -97,10 +96,11 @@ void ecum_configure_io_interfaces(void)
 
     PIOA->PIO_PER = PIO_PER_P0  | PIO_PER_P1  | PIO_PER_P2 |  PIO_PER_P6 |
                     PIO_PER_P7  | PIO_PER_P8  | PIO_PER_P9 | PIO_PER_P10 |
-                    PIO_PER_P20;
+                    PIO_PER_P19 | PIO_PER_P20;
 
     PIOA->PIO_OER = PIO_PER_P0  | PIO_PER_P1  | PIO_PER_P2  | PIO_PER_P6 |
-                    PIO_PER_P7  | PIO_PER_P10 | PIO_PER_P19;
+                    PIO_PER_P7  | PIO_PER_P10;
+    PIOA->PIO_ODR = PIO_PER_P19;
 
     PIOA->PIO_PDR = PIO_PER_P4 | PIO_PER_P3;
     PIOA->PIO_PDR = PIO_PER_P11 | PIO_PER_P12;
@@ -115,7 +115,7 @@ void ecum_configure_io_interfaces(void)
     PIOA->PIO_ABCDSR[1] &= ~PIO_ABCDSR_P4;
 
     PIOA->PIO_CODR = PIO_CODR_P0  | PIO_CODR_P1  | PIO_CODR_P2  | PIO_CODR_P6 |
-                     PIO_CODR_P7  | PIO_CODR_P10 | PIO_CODR_P19;
+                     PIO_CODR_P7  | PIO_CODR_P10;
     PIOA->PIO_SODR = PIO_SODR_P6;
 
     PIOA->PIO_IER    = PIO_IER_P9 | PIO_IER_P8;
@@ -220,7 +220,7 @@ void ecum_configure_uart_interface(void)
 void ecum_configure_analog_input_interface(void)
 {
     ADC->ADC_WPMR = ADC_WPMR_WPKEY_PASSWD;
-    ADC->ADC_CHER = ADC_CHER_CH4;
+    ADC->ADC_CHER = ADC_CHER_CH2;
     /* configure acquisition mode
      * ADCLCK = MAIN_CLOCK / PRESCAL
      */
@@ -237,6 +237,8 @@ void ecum_configure_analog_input_interface(void)
 
     ADC->ADC_COR = 0;  /* No offset and single mode*/
     ADC->ADC_CGR = 0; /* All gains set to 1 */
+
+    ADC->ADC_EMR |= ADC_EMR_TAG;
 
     ADC->ADC_IER = ADC_IER_DRDY;
 
@@ -260,7 +262,7 @@ void ecum_configure_peripheral_clocks(void)
     /* Unlock PMC registers*/
     PMC->PMC_WPMR = PMC_WPMR_WPKEY_PASSWD;
     PMC->PMC_PCER0 = PMC_PCER0_PID11 | PMC_PCER0_PID12 |
-                     PMC_PCER0_PID19 | PMC_PCER0_PID21 |
+                     PMC_PCER0_PID19 | PMC_PCER0_PID21 | PMC_PCER0_PID29 |
                      PMC_PCER0_PID31;
     /* Lock PMC registers*/
     PMC->PMC_WPMR =   PMC_WPMR_WPEN |

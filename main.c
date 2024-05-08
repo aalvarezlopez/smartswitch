@@ -2,6 +2,7 @@
 #include "stdbool.h"
 #include "EcuM.h"
 #include "enc28j60.h"
+#include "io.h"
 
 extern volatile bool OS_Task_A;
 extern volatile bool OS_Task_B;
@@ -25,6 +26,7 @@ int main(void)
         if(OS_Task_A == true){
             SPI_Task();
             SmartSwitch_Task();
+            ADC_Task();
             OS_Task_A = false;
         }
         if(OS_Task_B == true){
