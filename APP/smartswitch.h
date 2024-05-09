@@ -19,4 +19,6 @@ void SmartSwitch_flowMeter(bool q1, bool q2);
 void SmartSwitch_broadcastMessage(char * const msg);
 void SmartSwitch_statusMessage(char * const msg);
 void SmartSwitch_newFrame(const uint8_t * msg, char * rply);
+
+
 #endif

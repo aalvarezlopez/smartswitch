@@ -16,6 +16,7 @@
 #include "str.h"
 
 bool smartswitch_roomActive = false;
+uint8_t darkness_level = 0;
 uint16_t radiatior_q[2] = {0, 0};
 extern uint32_t temp_01;
 uint32_t temp_target;
@@ -40,7 +41,32 @@ void SmartSwitch_Init(void)
 
 void SmartSwitch_Task(void)
 {
+    static uint16_t lightsensor_mean[] = {0, 0, 0, 0, 0};
+    uint8_t nsamples = 0;
+    uint16_t lightsensor_raw = 0;
+    uint32_t sum =0;
     smartswitch_roomActive = IO_isPIRactive();
+    if ( IO_getLastAcquiredValue( SMARTSWITCH_LIGHTSENSOR_ADC_CH, &lightsensor_raw) ){
+        lightsensor_mean[nsamples % 5] = lightsensor_raw;
+    }
+    for( uint8_t i = 0; i < 5; i++){
+        if(lightsensor_mean[i] == 0){
+            break;
+        }
+        sum += lightsensor_mean[i];
+        nsamples++;
+    }
+    sum = nsamples > 0 ? sum / nsamples : 0;
+    if( sum > 0){
+        if( sum > SMARTSWITCH_DARK_100 ){
+            darkness_level = 100;
+        }else if (sum < SMARTSWITCH_DARK_0){
+            darkness_level = 0;
+        }else{
+            darkness_level = ((sum - SMARTSWITCH_DARK_0) * 100) /
+                             (SMARTSWITCH_DARK_100 - SMARTSWITCH_DARK_0);
+        }
+    }
 }
 
 void SmartSwitch_SlowTask(void)
@@ -169,15 +195,17 @@ void SmartSwitch_statusMessage(char * const msg)
     }else{
         strcpy(msg+27, ",\nLIGHT:OFF");
     }
-    strcpy(msg+38, ",\nSHUTTER:");
-    int_to_str(msg + 48, shutter[0], 3);
-    msg[51] = ';';
-    int_to_str(msg + 52, shutter[1], 3);
-    msg[55] = ';';
-    int_to_str(msg + 56, shutter[2], 3);
-    msg[59] = '}';
-    msg[60] = '\n';
-    msg[61] = 0;
+    strcpy(msg+38, ",\nDARKNESS:");
+    int_to_str(msg + 49, darkness_level , 3);
+    strcpy(msg+52, ",\nSHUTTER:");
+    int_to_str(msg + 62, shutter[0], 3);
+    msg[65] = ';';
+    int_to_str(msg + 66, shutter[1], 3);
+    msg[69] = ';';
+    int_to_str(msg + 70, shutter[2], 3);
+    msg[73] = '}';
+    msg[72] = '\n';
+    msg[75] = 0;
 
 }
 
