@@ -5,6 +5,7 @@
 #include "arp.h"
 
 #define ETH_PROTOCOL_UDP 17
+#define DST_ADD 254u
 
 bool linkup = false;
 uint32_t ipv4_id = 0x1489;
@@ -23,8 +24,8 @@ void TCPIP_Task(void)
         char msg[256];
         SmartSwitch_broadcastMessage(msg);
         broadcastUdpMessage(msg, strlen(msg)+1, 12101, 54134);
-        if( !arp_isResolved(254)){
-            char ip[] = {192, 168, 1, 254};
+        if( !arp_isResolved(DST_ADD)){
+            char ip[] = {192, 168, 1, DST_ADD};
             ARP_sendrequest(ip);
         }
         if( !arp_isResolved(1)){
@@ -57,7 +58,7 @@ void getUdpFrame(const uint8_t * buffer)
     if( dstport == 54134 ) {
         char rply[256];
         SmartSwitch_newFrame(buffer+28, rply);
-        sendUdpMessage(254, rply, strlen(rply)+1, 12101, 54134);
+        sendUdpMessage(DST_ADD, rply, strlen(rply)+1, 12101, 54134);
     }
 }
 
