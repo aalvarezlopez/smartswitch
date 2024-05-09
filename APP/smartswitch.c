@@ -76,11 +76,11 @@ void SmartSwitch_SlowTask(void)
 
     Display_printTime(date.hour, date.min);
     Display_printDate(date.day, date.month);
-    Display_printHeat(true);
+    Display_printHeat(temp_target < (temp_01/10));
     Display_printTemp( temp_01 / 10 , temp_target);
     Display_refresh();
-    IO_openRadiatorValve(0, false);
-    IO_openRadiatorValve(1, false);
+    IO_openRadiatorValve(0, (temp_target > temp_01/10));
+    IO_openRadiatorValve(1, (temp_target > temp_01/10));
 }
 
 void SmartSwitch_Action(bool presence,bool button)
@@ -90,8 +90,9 @@ void SmartSwitch_Action(bool presence,bool button)
     }else{
         IO_setDimmer(0);
     }
-    if( button ){
-        IO_setLights(true);
+    if( !button ){
+
+        IO_setLights(!IO_getLights());
     }
 }
 
