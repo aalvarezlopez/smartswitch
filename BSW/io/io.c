@@ -70,37 +70,36 @@ void IO_PWM_Init(void)
                     PWM_WPCR_WPRG1 | PWM_WPCR_WPRG2 | PWM_WPCR_WPRG3;
 }
 
-bool IO_oneWire_Read(void)
+bool IO_oneWire_Read(uint32_t iface)
 {
-   return (PIOA->PIO_PDSR & PIO_PDSR_P16) != 0;
+   return (PIOA->PIO_PDSR & iface) != 0;
 }
 
-void IO_oneWire_Input(void)
+void IO_oneWire_Input(uint32_t iface)
 {
     PIOA->PIO_WPMR  = PIO_WPMR_WPKEY_PASSWD;
-    PIOA->PIO_ODR   = PIO_PER_P16;
-    PIOA->PIO_PUER  = PIO_PUER_P16;
+    PIOA->PIO_ODR   = iface;
+    PIOA->PIO_PUER  = iface;
     PIOA->PIO_WPMR  = PIO_WPMR_WPEN |
                      PIO_WPMR_WPKEY_PASSWD;
 }
 
-void IO_oneWire_Output(void)
+void IO_oneWire_Output(uint32_t iface)
 {
     PIOA->PIO_WPMR = PIO_WPMR_WPKEY_PASSWD;
-    PIOA->PIO_OER  = PIO_PER_P16;
-    PIOA->PIO_SODR = PIO_SODR_P16;
+    PIOA->PIO_OER  = iface;
+    PIOA->PIO_SODR = iface;
     PIOA->PIO_WPMR = PIO_WPMR_WPEN |
                      PIO_WPMR_WPKEY_PASSWD;
 }
-
-void IO_oneWire_Set(void)
+void IO_oneWire_Set(uint32_t iface)
 {
-    PIOA->PIO_SODR = PIO_SODR_P16;
+    PIOA->PIO_SODR = iface;
 }
 
-void IO_oneWire_Clear(void)
+void IO_oneWire_Clear(uint32_t iface)
 {
-    PIOA->PIO_CODR = PIO_CODR_P16;
+    PIOA->PIO_CODR = iface;
 }
 /**
  * @brief Launch a new ADC acquisition using the channels which were previously

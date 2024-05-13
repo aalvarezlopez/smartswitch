@@ -1,7 +1,4 @@
 /**
- * @file ds18b20.c
- * @brief Temperature sensor
- * @author Adrian Alvarez Lopez
  * @version 1.0.0
  * @date 2023-08-31
  */
@@ -14,15 +11,6 @@
 
 #include "ds18b20_pri.h"
 #include "delays.h"
-
-// OneWire commands
-#define STARTCONVO      0x44  // Tells device to take a temperature reading and put it on the scratchpad
-#define COPYSCRATCH     0x48  // Copy scratchpad to EEPROM
-#define READSCRATCH     0xBE  // Read from scratchpad
-#define WRITESCRATCH    0x4E  // Write to scratchpad
-#define RECALLSCRATCH   0xB8  // Recall from EEPROM to scratchpad
-#define READPOWERSUPPLY 0xB4  // Determine if device needs parasite power
-#define ALARMSEARCH     0xEC  // Query bus for devices with an alarm condition
 
 // Scratchpad locations
 #define TEMP_LSB        0
@@ -46,32 +34,132 @@
 #define TEMP_12_BIT 0x7F // 12 bit
 
 #define MAX_CONVERSION_TIMEOUT      750
+#define MAX_WATER_TEMP_SENSORS 4u
 
 uint8_t scratchPad[9];
 uint32_t temp_01;
 
+uint8_t lastDiscrepancy = 0;
+uint64_t address = 0;
+
+uint64_t iface1_add[MAX_WATER_TEMP_SENSORS];
+uint64_t iface1_ndevs = 0;
+uint32_t iface1_temps[MAX_WATER_TEMP_SENSORS];
+
 void DS18B20_Init(void)
 {
-    (void)DS18B20_readScratchPad(scratchPad);
-    DS18B20_requestTemperatures();
+    oneWire_reset(AIR_TEMP_IFACE);
+    DS18B20_oneWireSearch(SEARCHROMCMD, AIR_TEMP_IFACE);
+
+    while(true){
+        bool lastDevice;
+        oneWire_reset(RAD_TEMP_IFACE);
+        lastDevice = DS18B20_oneWireSearch(SEARCHROMCMD, RAD_TEMP_IFACE);
+        iface1_add[iface1_ndevs] = address;
+        iface1_ndevs++;
+        if( lastDevice == true ){
+            break;
+        }
+    }
+
+    (void)DS18B20_readScratchPad(scratchPad, AIR_TEMP_IFACE, 0);
+    DS18B20_requestTemperatures(AIR_TEMP_IFACE, 0);
+
+    for( uint8_t i = 0; i < iface1_ndevs; i++){
+        (void)DS18B20_readScratchPad(scratchPad, RAD_TEMP_IFACE, iface1_add[i]);
+        DS18B20_requestTemperatures(RAD_TEMP_IFACE, iface1_add[i]);
+    }
 }
 
 void DS18B20_Task(void)
 {
-    if(DS18B20_readScratchPad(scratchPad)){
+    static uint8_t iface1_lastidx = 0;
+    if(DS18B20_readScratchPad(scratchPad, AIR_TEMP_IFACE, 0)){
         temp_01 = DS18B20_calculateTemperature(scratchPad);
-        DS18B20_requestTemperatures();
+        DS18B20_requestTemperatures(AIR_TEMP_IFACE, 0);
+    }
+    if(DS18B20_readScratchPad(scratchPad, RAD_TEMP_IFACE, iface1_add[iface1_lastidx])){
+        iface1_temps[iface1_lastidx] = DS18B20_calculateTemperature(scratchPad);
+        iface1_lastidx++;
+        if(iface1_lastidx >= iface1_ndevs){
+            iface1_lastidx = 0;
+        }
+        DS18B20_requestTemperatures(RAD_TEMP_IFACE, iface1_add[iface1_lastidx]);
     }
 }
 
-bool DS18B20_readScratchPad( uint8_t* scratchPad )
+
+/**
+ * @brief 
+ *
+ * currentBit currentBitComp
+ * 0 0 DISCREPANCY: there are both 0s and 1s
+ * 0 1 There are only 0
+ * 1 0 There are only 1
+ * 1 1 No device participating
+ *
+ * @param romCommand
+ *
+ * @return 
+ */
+bool DS18B20_oneWireSearch(uint8_t romCommand, uint32_t iface)
+{
+    uint8_t lastZero = 0;
+    uint8_t direction, currentBit, currentBitComp;
+    bool    lastDevice = true;
+    address = 0;
+
+    oneWire_write(romCommand, iface);
+
+    for (uint8_t bitPosition = 0; bitPosition < 64; bitPosition++) {
+        currentBit = oneWire_read_bit(iface);
+        currentBitComp = oneWire_read_bit(iface);
+
+        if (currentBit == 1 && currentBitComp == 1) {
+            lastDiscrepancy = 0;
+            return false;
+        }else if (currentBit == 0 && currentBitComp == 0) {
+            if (bitPosition == lastDiscrepancy) {
+                direction = 1;
+            } else if (bitPosition > lastDiscrepancy) {
+                direction = 0;
+                lastZero = bitPosition;
+            } else {
+                direction = (address >> bitPosition) & 1u;
+
+                if ( direction == 0) {
+                    lastZero = bitPosition;
+                }
+            }
+        } else {
+            direction = currentBit;
+        }
+        address = address | ((uint64_t)direction << bitPosition);
+        oneWire_write_bit(direction, iface);
+    }
+
+    lastDiscrepancy = lastZero;
+
+    if (lastZero != 0) {
+        lastDevice = false;
+    }
+
+    return lastDevice;
+}
+
+
+bool DS18B20_readScratchPad( uint8_t* scratchPad, uint32_t iface, uint64_t add )
 {
     // send the reset command and fail fast
     bool result = false;
-    int b = oneWire_reset();
+    int b = oneWire_reset(iface);
     if (b == 0){ 
-        oneWire_skip();
-        oneWire_write(READSCRATCH);
+        if( add == 0 ){
+            oneWire_skip(iface);
+        }else{
+            oneWire_match(iface, add);
+        }
+        oneWire_write(READSCRATCH, iface);
 
         // Read all registers in a simple loop
         // byte 0: temperature LSB
@@ -87,10 +175,10 @@ bool DS18B20_readScratchPad( uint8_t* scratchPad )
         //         DS18B20 & DS1822: store for crc
         // byte 8: SCRATCHPAD_CRC
         for (uint8_t i = 0; i < 9; i++) {
-            scratchPad[i] = oneWire_read();
+            scratchPad[i] = oneWire_read(iface);
         }
 
-        b = oneWire_reset();
+        b = oneWire_reset(iface);
         result = (b == 0) ? true : false;
     }else{
         /*Do nothing as device is not present. Line in high level */
@@ -98,18 +186,22 @@ bool DS18B20_readScratchPad( uint8_t* scratchPad )
     return result;
 }
 
-void DS18B20_writeScratchPad( const uint8_t* scratchPad)
+void DS18B20_writeScratchPad( const uint8_t* scratchPad, uint32_t iface, uint64_t add)
 {
-    oneWire_reset();
-    oneWire_skip();
-    oneWire_write(WRITESCRATCH);
-    oneWire_write(scratchPad[HIGH_ALARM_TEMP]); // high alarm temp
-    oneWire_write(scratchPad[LOW_ALARM_TEMP]); // low alarm temp
+    oneWire_reset(iface);
+    if( add == 0 ){
+        oneWire_skip(iface);
+    }else{
+        oneWire_match(iface, add);
+    }
+    oneWire_write(WRITESCRATCH, iface);
+    oneWire_write(scratchPad[HIGH_ALARM_TEMP], iface); // high alarm temp
+    oneWire_write(scratchPad[LOW_ALARM_TEMP], iface); // low alarm temp
 
     // DS1820 and DS18S20 have no configuration register
-    oneWire_write(scratchPad[CONFIGURATION]);
+    oneWire_write(scratchPad[CONFIGURATION], iface);
 
-    oneWire_reset();
+    oneWire_reset(iface);
 }
 // set resolution of a device to 9, 10, 11, or 12 bits
 // if new resolution is out of range, 9 bits is used.
@@ -206,18 +298,23 @@ uint8_t DS18B20_getResolution(void)
 }
 
 
-bool DS18B20_isConversionComplete() {
-    uint8_t b = oneWire_read_bit();
+bool DS18B20_isConversionComplete(uint32_t iface) {
+    uint8_t b = oneWire_read_bit(iface);
     return (b == 1);
 }
 
 // sends command for all devices on the bus to perform a temperature conversion
-void DS18B20_requestTemperatures() {
-    oneWire_reset();
-    oneWire_skip();
-    oneWire_write(STARTCONVO);
+void DS18B20_requestTemperatures(uint32_t iface, uint64_t add)
+{
+    oneWire_reset(iface);
+    if( add == 0 ){
+        oneWire_skip(iface);
+    }else{
+        oneWire_match(iface, add);
+    }
+    oneWire_write(STARTCONVO, iface);
 
-    while(DS18B20_isConversionComplete() == false){
+    while(DS18B20_isConversionComplete(iface) == false){
         delay_ms(10);
     }
 }
@@ -226,37 +323,44 @@ void DS18B20_requestTemperatures() {
 // Sends command to one or more devices to save values from scratchpad to EEPROM
 // If optional argument deviceAddress is omitted the command is send to all devices
 // Returns true if no errors were encountered, false indicates failure
-bool DS18B20_saveScratchPad()
+bool DS18B20_saveScratchPad(uint32_t iface, uint64_t add)
 {
 
-    if (oneWire_reset() == 0)
+    if (oneWire_reset(iface) == 0)
         return false;
 
-    oneWire_skip();
+    if( add == 0 ){
+        oneWire_skip(iface);
+    }else{
+        oneWire_match(iface, add);
+    }
 
-    oneWire_write(COPYSCRATCH);
+    oneWire_write(COPYSCRATCH, iface);
 
     // Specification: NV Write Cycle Time is typically 2ms, max 10ms
     // Waiting 20ms to allow for sensors that take longer in practice
     delay_ms(20);
 
-    return oneWire_reset() == 1;
+    return oneWire_reset(iface) == 1;
 
 }
 
 // Sends command to one or more devices to recall values from EEPROM to scratchpad
 // If optional argument deviceAddress is omitted the command is send to all devices
 // Returns true if no errors were encountered, false indicates failure
-bool DS18B20_recallScratchPad(void)
+bool DS18B20_recallScratchPad(uint32_t iface, uint64_t add)
 {
-    oneWire_skip();
-
-    oneWire_write(RECALLSCRATCH);
-
-    while (oneWire_read_bit() == 0) {
+    if( add == 0 ){
+        oneWire_skip(iface);
+    }else{
     }
 
-    return oneWire_reset() == 1;
+    oneWire_write(RECALLSCRATCH, iface);
+
+    while (oneWire_read_bit(iface) == 0) {
+    }
+
+    return oneWire_reset(iface) == 1;
 
 }
 

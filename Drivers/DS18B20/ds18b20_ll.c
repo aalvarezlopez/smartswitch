@@ -7,104 +7,120 @@
  */
 
 
-#include "ds18b20.h"
+#include "stdint.h"
 #include "stdio.h"
 #include "stdbool.h"
+#include "ds18b20.h"
+#include "ds18b20_pri.h"
 #include "io.h"
 #include "delays.h"
 
 #include "errorlog.h"
 
-uint8_t oneWire_reset(void)
+uint8_t oneWire_reset(uint32_t iface)
 {
     uint8_t r;
     uint8_t retries = 125;
 
-    IO_oneWire_Output();
+    IO_oneWire_Output(iface);
     do {
         if (--retries == 0){
             errorlog_reportError( DS18B20_MODULE, NULL, 0);
         }
         delay_us(2);
-    } while ( IO_oneWire_Read() == false );
+    } while ( IO_oneWire_Read(iface) == false );
 
-    IO_oneWire_Clear();
+    IO_oneWire_Clear(iface);
     delay_us(480);
-    IO_oneWire_Input();
+    IO_oneWire_Input(iface);
     delay_us(70);
-    r = IO_oneWire_Read() == true ? 1 : 0;
+    r = IO_oneWire_Read(iface) == true ? 1 : 0;
     delay_us(490);
     return r;
 }
 
-void oneWire_begin(uint8_t pin)
+void oneWire_begin( uint32_t iface)
 {
-    oneWire_reset();
+    oneWire_reset(iface);
 }
 
-void oneWire_write_bit(uint8_t v)
+void oneWire_write_bit(uint8_t v, uint32_t iface)
 {
-    IO_oneWire_Output();
-    IO_oneWire_Clear();
+    IO_oneWire_Output(iface);
+    IO_oneWire_Clear(iface);
     if (v & 1) {
         delay_us(10);
-        IO_oneWire_Set();
+        IO_oneWire_Set(iface);
         delay_us(55);
     } else {
         delay_us(65);
-        IO_oneWire_Set();
+        IO_oneWire_Set(iface);
         delay_us(5);
     }
 }
 
-uint8_t oneWire_read_bit(void)
+uint8_t oneWire_read_bit(uint32_t iface)
 {
     uint8_t r;
 
-    IO_oneWire_Output();
-    IO_oneWire_Clear();
+    IO_oneWire_Output(iface);
+    IO_oneWire_Clear(iface);
     delay_us(2);
-    IO_oneWire_Input();   // let pin float, pull up will raise
+    IO_oneWire_Input(iface);
     delay_us(10);
-    r = IO_oneWire_Read() == true ? 1 : 0;
+    r = IO_oneWire_Read(iface) == true ? 1 : 0;
     delay_us(53);
     return r;
 }
 
-void oneWire_write(uint8_t v)
+void oneWire_write(uint8_t v, uint32_t iface)
 {
     uint8_t bitMask;
 
     for (bitMask = 0x01; bitMask; bitMask <<= 1) {
-        oneWire_write_bit( (bitMask & v)?1:0);
+        oneWire_write_bit( (bitMask & v)?1:0, iface);
     }
 }
 
-void oneWire_write_bytes(const uint8_t *buf, uint16_t count)
+void oneWire_write_bytes(const uint8_t *buf, uint16_t count, uint32_t iface)
 {
     for (uint16_t i = 0 ; i < count ; i++){
-        oneWire_write(buf[i]);
+        oneWire_write(buf[i], iface);
     }
 }
 
-uint8_t oneWire_read() {
+uint8_t oneWire_read(uint32_t iface)
+{
     uint8_t bitMask;
     uint8_t r = 0;
 
     for (bitMask = 0x01; bitMask; bitMask <<= 1) {
-        if ( oneWire_read_bit()) r |= bitMask;
+        if ( oneWire_read_bit(iface)) r |= bitMask;
     }
     return r;
 }
 
-void oneWire_read_bytes(uint8_t *buf, uint16_t count) {
+void oneWire_read_bytes(uint8_t *buf, uint16_t count, uint32_t iface) {
     for (uint16_t i = 0 ; i < count ; i++)
-        buf[i] = oneWire_read();
+        buf[i] = oneWire_read(iface);
 }
 
-void oneWire_skip()
+void oneWire_match(uint32_t iface, uint64_t add)
 {
-    oneWire_write(0xCC);
+    uint64_t temp = add;
+    oneWire_write(MATCHCMD, iface);
+    oneWire_write(temp & 0xFF, iface); // Family byte
+    temp >>= 8;
+    for(uint8_t i = 0; i < 6; i++){
+        oneWire_write(temp, iface); // Single ID byte
+        temp >>= 8;
+    }
+    oneWire_write(temp & 0xFF, iface);  // CRC byte
+}
+
+void oneWire_skip(uint32_t iface)
+{
+    oneWire_write(0xCC, iface);
 }
 
 #if ONEWIRE_CRC
