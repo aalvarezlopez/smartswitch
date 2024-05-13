@@ -18,7 +18,6 @@
 bool smartswitch_roomActive = false;
 uint8_t darkness_level = 0;
 uint16_t radiatior_q[2] = {0, 0};
-extern uint32_t temp_01;
 uint32_t temp_target;
 
 typedef struct date_s{
@@ -71,16 +70,21 @@ void SmartSwitch_Task(void)
 
 void SmartSwitch_SlowTask(void)
 {
+    uint8_t nsensors = 0;
+    uint32_t t[MAX_WATER_TEMP_SENSORS + 1];
     date_st date;
     smartswitch_getdate(&date);
 
+    nsensors =  DS18B20_getTempC(t);
+
     Display_printTime(date.hour, date.min);
     Display_printDate(date.day, date.month);
-    Display_printHeat(temp_target < (temp_01/10));
-    Display_printTemp( temp_01 / 10 , temp_target);
+    Display_printHeat(temp_target < (t[0]/10));
+    Display_printTemp( t[0] / 10 , temp_target);
     Display_refresh();
-    IO_openRadiatorValve(0, (temp_target > temp_01/10));
-    IO_openRadiatorValve(1, (temp_target > temp_01/10));
+
+    IO_openRadiatorValve(0, (temp_target > t[0]/10));
+    IO_openRadiatorValve(1, (temp_target > t[0]/10));
 }
 
 void SmartSwitch_Action(bool presence,bool button)
@@ -175,6 +179,9 @@ void SmartSwitch_statusMessage(char * const msg)
     bool rad[2];
     date_st date;
     uint8_t shutter[3];
+    uint8_t nsensors = 0;
+    uint32_t t[MAX_WATER_TEMP_SENSORS + 1];
+    nsensors =  DS18B20_getTempC(t);
     smartswitch_getdate(&date);
     IO_getRadiatorState(rad);
     IO_getShutterPosition(shutter);
@@ -185,7 +192,7 @@ void SmartSwitch_statusMessage(char * const msg)
     msg[6] = ':';
     int_to_str(msg + 7, date.sec, 2);
     strcpy(msg+9, "]{TEMP:");
-    int_to_str(msg + 16, temp_01 / 10, 2);
+    int_to_str(msg + 16, t[0] / 10, 2);
     if( rad[0] == true || rad[1] == true ){
         strcpy(msg+18, ",\nRAD: ON");
     }else{
@@ -204,9 +211,14 @@ void SmartSwitch_statusMessage(char * const msg)
     int_to_str(msg + 66, shutter[1], 3);
     msg[69] = ';';
     int_to_str(msg + 70, shutter[2], 3);
-    msg[73] = '}';
-    msg[72] = '\n';
-    msg[75] = 0;
+    strcpy(msg+73, ",\nRTEMP:");
+    for(uint8_t i = 0; i < nsensors; i++){
+        int_to_str(msg + 81 + (3*i), t[i + 1] / 10, 2);
+        strcpy(msg+83+ (3 * i), "#");
+    }
+    msg[81 + (3*nsensors)] = '}';
+    msg[82 + (3*nsensors)] = '\n';
+    msg[83 + (3*nsensors)] = 0;
 
 }
 

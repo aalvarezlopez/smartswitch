@@ -12,6 +12,8 @@
 #include "ds18b20_pri.h"
 #include "delays.h"
 
+#include "smartswitch.h"
+
 // Scratchpad locations
 #define TEMP_LSB        0
 #define TEMP_MSB        1
@@ -34,7 +36,6 @@
 #define TEMP_12_BIT 0x7F // 12 bit
 
 #define MAX_CONVERSION_TIMEOUT      750
-#define MAX_WATER_TEMP_SENSORS 4u
 
 uint8_t scratchPad[9];
 uint32_t temp_01;
@@ -377,7 +378,13 @@ int32_t DS18B20_calculateTemperature( uint8_t* scratchPad)
     return temperature;
 }
 
-float DS18B20_getTempC(void) {
+uint8_t  DS18B20_getTempC(uint32_t *temp)
+{
+    temp[0] = temp_01;
+    for(uint8_t i = 0; i < iface1_ndevs; i++){
+        temp[1 + i] = iface1_temps[i];
+    }
+    return iface1_ndevs;
 }
 
 void DS18B20_setUserData( int16_t data)

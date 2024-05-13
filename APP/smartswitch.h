@@ -11,6 +11,8 @@
 #include "stdint.h"
 #include "io.h"
 
+#define MAX_WATER_TEMP_SENSORS 4u
+
 void SmartSwitch_Init(void);
 void SmartSwitch_Task(void);
 void SmartSwitch_SlowTask(void);
