@@ -129,3 +129,17 @@ bool arp_isResolved(uint8_t ip)
     }
     return result;
 }
+
+bool arp_getMAC(uint8_t ip, uint8_t *mac)
+{
+    bool result = false;
+    for( uint8_t i = 0; i < arptable_entries; i++){
+        if( arptable[i].ip[3] == ip ){
+            result = true;
+            for(uint8_t j = 0; j < 6; j++){
+                mac[j] = arptable[i].mac[j];
+            }
+        }
+    }
+    return result;
+}

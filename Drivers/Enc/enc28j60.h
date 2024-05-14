@@ -21,7 +21,7 @@
  #define TXSTOP_INIT         0x11FF  /*! Remaining memory will be use as TX buffer */
 
 #define ENC_MAX_BUF_SIZE 1500
-#define MAX_RX_BUFFER_N 5
+#define MAX_RX_BUFFER_N 20
 
 /** @brief ENC28J60 init task
  *

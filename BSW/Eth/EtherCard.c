@@ -11,6 +11,9 @@ uint32_t g_stats_nRxFrames = 0;
 #define ETH_TYPE_TCPIP 0x0800
 #define ETH_TYPE_ARP   0x0806
 
+
+#define MYIP 137u
+
 void ethercard_parse(void);
 
 void EtherCard_Init ( void )
@@ -19,7 +22,7 @@ void EtherCard_Init ( void )
 
 void EtherCard_Task ( void )
 {
-    if(ENC_getnewentry(ethmessage)){
+    while(ENC_getnewentry(ethmessage)){
         ethercard_parse();
     }
 }
@@ -37,7 +40,7 @@ void ethercard_parse(void)
         if( ethmessage[38] == 192 &&
             ethmessage[39] == 168 &&
             ethmessage[40] == 1 &&
-            ethmessage[41] == 137){
+            ethmessage[41] == MYIP){
             ARP_sendreplyrouter(ethmessage+28, ethmessage+22);
         }
     }

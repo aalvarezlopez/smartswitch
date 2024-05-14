@@ -265,7 +265,7 @@ uint16_t packetReceive(void)
 {
     static uint16_t gNextPacketPtr = RXSTART_INIT;
     uint16_t len = 0;
-    if (readRegByte(EPKTCNT) > 0) {
+    while (readRegByte(EPKTCNT) > 0) {
         writeReg(ERDPT, gNextPacketPtr);
         struct  {
             uint16_t nextPacket;

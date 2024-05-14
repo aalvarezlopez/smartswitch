@@ -5,7 +5,7 @@
 #include "arp.h"
 
 #define ETH_PROTOCOL_UDP 17
-#define DST_ADD 254u
+#define DST_ADD 132
 
 bool linkup = false;
 uint32_t ipv4_id = 0x1489;
@@ -24,12 +24,11 @@ void TCPIP_Task(void)
         char msg[256];
         SmartSwitch_broadcastMessage(msg);
         broadcastUdpMessage(msg, strlen(msg)+1, 12101, 54134);
-        if( !arp_isResolved(DST_ADD)){
-            char ip[] = {192, 168, 1, DST_ADD};
-            ARP_sendrequest(ip);
-        }
         if( !arp_isResolved(1)){
             char ip[] = {192, 168, 1, 1};
+            ARP_sendrequest(ip);
+        }else if( !arp_isResolved(DST_ADD)){
+            char ip[] = {192, 168, 1, DST_ADD};
             ARP_sendrequest(ip);
         }
         counter = 0;
@@ -99,56 +98,56 @@ void sendUdpMessage(uint8_t ip, uint8_t *msg, uint16_t len, uint16_t dstprt, uin
     uint16_t total_length = 20 + 8 + len;
     uint16_t udp_length = 8 + len;
     /* DST MAC */
-    buffer[0] = 0x5e; buffer[1] = 0x02; buffer[2] = 0x0d;
-    buffer[3] = 0x36; buffer[4] = 0x4c; buffer[5] = 0xe6;
-    /* SRC MAC */
-    buffer[6] = 0x00; buffer[7]  = 0xE9; buffer[8]  = 0x3A;
-    buffer[9] = 0x25; buffer[10] = 0xC2; buffer[11] = 0x29;
-    /* ETH TYPE - IPv4 */
-    buffer[12] = 0x08;
-    buffer[13] = 0x00;
-    /* *************** IP FRAME **************** */
-    /* VERSION | IHL | TOS */
-    buffer[14] = 0x45; buffer[15] = 0x00;
-    /* TOTAL LENGTH */
-    buffer[16] = total_length >> 8; buffer[17] = (total_length & 0xFF);
-    /* UNIQUE ID */
-    buffer[18] = ipv4_id >> 8;
-    buffer[19] = ipv4_id & 0xFF;
-    /* FLAGS | FRAGMENT OFFSET | TTL | PROTOCOL (UDP) */
-    buffer[20] = 0x40; buffer[21] = 0x00; buffer[22] = 0x40; buffer[23] = 17;
-    /* HEADER CHECKSUM */
-    buffer[24] = 0x00;
-    buffer[25] = 0x00;
-    /* SRC ADDRESS */
-    buffer[26] = 192; buffer[27] = 168; buffer[28] = 1; buffer[29] = 137;
-    /* DST ADDRESS */
-    buffer[30] = 192; buffer[31] = 168; buffer[32] = 1; buffer[33] = ip;
-    /* **************** UDP FRAME ************* */
-    buffer[34] = srcprt >> 8; buffer[35] = srcprt & 0xFF;
-    buffer[36] = dstprt >> 8; buffer[37] = dstprt & 0xFF;
-    buffer[38] = (udp_length) >> 8;
-    buffer[39] = (udp_length) & 0xFF;
-    /* CRC */
-    buffer[40] = 0x00; buffer[41] = 0x00;
-    /*** MSG ****/
-    memcpy( buffer + 42, msg, len);
-    crc =  chksum( 0, buffer + 14, 20);
-    crc = ~crc;
-    buffer[24] = crc >> 8;
-    buffer[25] = crc & 0xFF;
+    if(arp_getMAC(ip, buffer)){
+        /* SRC MAC */
+        buffer[6] = 0x00; buffer[7]  = 0xE9; buffer[8]  = 0x3A;
+        buffer[9] = 0x25; buffer[10] = 0xC2; buffer[11] = 0x29;
+        /* ETH TYPE - IPv4 */
+        buffer[12] = 0x08;
+        buffer[13] = 0x00;
+        /* *************** IP FRAME **************** */
+        /* VERSION | IHL | TOS */
+        buffer[14] = 0x45; buffer[15] = 0x00;
+        /* TOTAL LENGTH */
+        buffer[16] = total_length >> 8; buffer[17] = (total_length & 0xFF);
+        /* UNIQUE ID */
+        buffer[18] = ipv4_id >> 8;
+        buffer[19] = ipv4_id & 0xFF;
+        /* FLAGS | FRAGMENT OFFSET | TTL | PROTOCOL (UDP) */
+        buffer[20] = 0x40; buffer[21] = 0x00; buffer[22] = 0x40; buffer[23] = 17;
+        /* HEADER CHECKSUM */
+        buffer[24] = 0x00;
+        buffer[25] = 0x00;
+        /* SRC ADDRESS */
+        buffer[26] = 192; buffer[27] = 168; buffer[28] = 1; buffer[29] = 137;
+        /* DST ADDRESS */
+        buffer[30] = 192; buffer[31] = 168; buffer[32] = 1; buffer[33] = ip;
+        /* **************** UDP FRAME ************* */
+        buffer[34] = srcprt >> 8; buffer[35] = srcprt & 0xFF;
+        buffer[36] = dstprt >> 8; buffer[37] = dstprt & 0xFF;
+        buffer[38] = (udp_length) >> 8;
+        buffer[39] = (udp_length) & 0xFF;
+        /* CRC */
+        buffer[40] = 0x00; buffer[41] = 0x00;
+        /*** MSG ****/
+        memcpy( buffer + 42, msg, len);
+        crc =  chksum( 0, buffer + 14, 20);
+        crc = ~crc;
+        buffer[24] = crc >> 8;
+        buffer[25] = crc & 0xFF;
 
-    memcpy(pseudo_header, buffer + 26, 8);
-    pseudo_header[8] = 0; pseudo_header[9] = 0x11;
-    pseudo_header[10] = (udp_length >> 8); pseudo_header[11] = (udp_length) & 0xFF;
-    crc =  chksum( 0, pseudo_header, 12);
-    crc =  chksum( crc, buffer + 34, 8 + len);
-    crc = ~crc;
-    buffer[40] = crc >> 8;
-    buffer[41] = crc & 0xFF;
-    packetSend(42 + len, buffer);
+        memcpy(pseudo_header, buffer + 26, 8);
+        pseudo_header[8] = 0; pseudo_header[9] = 0x11;
+        pseudo_header[10] = (udp_length >> 8); pseudo_header[11] = (udp_length) & 0xFF;
+        crc =  chksum( 0, pseudo_header, 12);
+        crc =  chksum( crc, buffer + 34, 8 + len);
+        crc = ~crc;
+        buffer[40] = crc >> 8;
+        buffer[41] = crc & 0xFF;
+        packetSend(42 + len, buffer);
 
-    ipv4_id = ipv4_id + len;
+        ipv4_id = ipv4_id + len;
+    }
 }
 
 void broadcastUdpMessage(uint8_t *msg, uint16_t len, uint16_t dstprt, uint16_t srcprt)
