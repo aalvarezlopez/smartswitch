@@ -5,7 +5,7 @@
 #include "arp.h"
 
 #define ETH_PROTOCOL_UDP 17
-#define DST_ADD 132
+#define DST_ADD 254
 
 bool linkup = false;
 uint32_t ipv4_id = 0x1489;
