@@ -217,8 +217,12 @@ void SmartSwitch_statusMessage(char * const msg)
         strcpy(msg+83+ (3 * i), "#");
     }
     msg[81 + (3*nsensors)] = '}';
-    msg[82 + (3*nsensors)] = '\n';
-    msg[83 + (3*nsensors)] = 0;
+    msg[82 + (3*nsensors)] = '[';
+    msg[83 + (3*nsensors)] = '0';
+    msg[84 + (3*nsensors)] = '1';
+    msg[85 + (3*nsensors)] = ']';
+    msg[86 + (3*nsensors)] = '\n';
+    msg[87 + (3*nsensors)] = 0;
 
 }
 

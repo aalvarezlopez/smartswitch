@@ -54,10 +54,10 @@ void getUdpFrame(const uint8_t * buffer)
     dstport = buffer[22];
     dstport <<= 8;
     dstport |= buffer[23];
-    if( dstport == 54134 ) {
+    if( dstport == 54135 ) {
         char rply[256];
         SmartSwitch_newFrame(buffer+28, rply);
-        sendUdpMessage(DST_ADD, rply, strlen(rply)+1, 12101, 54134);
+        sendUdpMessage(DST_ADD, rply, strlen(rply)+1, 12101, 54135);
     }
 }
 
