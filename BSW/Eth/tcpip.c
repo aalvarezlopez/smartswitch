@@ -119,7 +119,7 @@ void sendUdpMessage(uint8_t ip, uint8_t *msg, uint16_t len, uint16_t dstprt, uin
         buffer[24] = 0x00;
         buffer[25] = 0x00;
         /* SRC ADDRESS */
-        buffer[26] = 192; buffer[27] = 168; buffer[28] = 1; buffer[29] = 137;
+        buffer[26] = 192; buffer[27] = 168; buffer[28] = 1; buffer[29] = MYIP;
         /* DST ADDRESS */
         buffer[30] = 192; buffer[31] = 168; buffer[32] = 1; buffer[33] = ip;
         /* **************** UDP FRAME ************* */
@@ -180,7 +180,7 @@ void broadcastUdpMessage(uint8_t *msg, uint16_t len, uint16_t dstprt, uint16_t s
     buffer[24] = 0x00;
     buffer[25] = 0x00;
     /* SRC ADDRESS */
-    buffer[26] = 192; buffer[27] = 168; buffer[28] = 1; buffer[29] = 137;
+    buffer[26] = 192; buffer[27] = 168; buffer[28] = 1; buffer[29] = MYIP;
     /* DST ADDRESS */
     buffer[30] = 255; buffer[31] = 255; buffer[32] = 255; buffer[33] = 255;
     /* **************** UDP FRAME ************* */

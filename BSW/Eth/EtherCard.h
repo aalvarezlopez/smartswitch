@@ -4,4 +4,6 @@
 void EtherCard_Init ( void );
 void EtherCard_Task ( void );
 
+#define MYIP 137u
+
  #endif

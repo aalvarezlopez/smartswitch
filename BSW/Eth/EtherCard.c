@@ -12,8 +12,6 @@ uint32_t g_stats_nRxFrames = 0;
 #define ETH_TYPE_ARP   0x0806
 
 
-#define MYIP 137u
-
 void ethercard_parse(void);
 
 void EtherCard_Init ( void )

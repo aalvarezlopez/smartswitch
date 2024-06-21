@@ -79,7 +79,7 @@ void SmartSwitch_SlowTask(void)
 
     Display_printTime(date.hour, date.min);
     Display_printDate(date.day, date.month);
-    Display_printHeat(temp_target < (t[0]/10));
+    Display_printHeat(temp_target > (t[0]/10));
     Display_printTemp( t[0] / 10 , temp_target);
     Display_refresh();
 

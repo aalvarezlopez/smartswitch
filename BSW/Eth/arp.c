@@ -47,7 +47,7 @@ void ARP_sendrequest(char * ip)
     buffer[28] = 192;
     buffer[29] = 168;
     buffer[30] = 1;
-    buffer[31] = 137;
+    buffer[31] = MYIP;
     buffer[32] = 0x00;
     buffer[33] = 0x00;
     buffer[34] = 0x00;
@@ -105,7 +105,7 @@ void ARP_sendreplyrouter(char * originip, char * originmac)
     buffer[28] = 192;
     buffer[29] = 168;
     buffer[30] = 1;
-    buffer[31] = 137;
+    buffer[31] = MYIP;
     buffer[32] = originmac[0];
     buffer[33] = originmac[1];
     buffer[34] = originmac[2];
