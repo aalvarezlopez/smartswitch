@@ -37,21 +37,21 @@ _STATIC uint8_t rx_buffer[UART_MAX_RX_BUFF_LEN];
 
 
 /**
- * @brief Initialize UART1 peripheral
+ * @brief Initialize UART0 peripheral
  */
 void UART_Init(void)
 {
-    UART1->UART_BRGR = ((uint32_t)(EcuM_getMainClockSpeed()) * UART_MHZ_TO_HZ )
+    UART0->UART_BRGR = ((uint32_t)(EcuM_getMainClockSpeed()) * UART_MHZ_TO_HZ )
         / UART_FIX_PRESCALER / UART_BAUDRATE;
-    UART1->UART_MR = UART_MR_PAR_NO | UART_MR_CHMODE_NORMAL;
-    UART1->UART_CR =  UART_CR_RSTRX | UART_CR_RSTTX | UART_CR_RSTSTA;
-    UART1->UART_CR = UART_CR_RXEN | UART_CR_TXEN;
-    UART1->UART_IER = UART_IER_RXRDY;
+    UART0->UART_MR = UART_MR_PAR_NO | UART_MR_CHMODE_NORMAL;
+    UART0->UART_CR =  UART_CR_RSTRX | UART_CR_RSTTX | UART_CR_RSTSTA;
+    UART0->UART_CR = UART_CR_RXEN | UART_CR_TXEN;
+    UART0->UART_IER = UART_IER_RXRDY;
 }
 
 
 /**
- * @brief Transmit an array of chars through the UART1. Blocking function, it will
+ * @brief Transmit an array of chars through the UART0. Blocking function, it will
  * stay here till the transmission is completed
  *
  * @param dout Pointer to the array of characters to be trasnmitted
@@ -61,8 +61,8 @@ void UART_tx(const uint8_t* const dout, uint8_t len)
 {
     ISR_disableAllInterrupts();
     for(uint8_t i = 0; i < len; i++){
-        while( (UART1->UART_SR & UART_SR_TXRDY) == 0 ){ continue;}
-        UART1->UART_THR = dout[i];
+        while( (UART0->UART_SR & UART_SR_TXRDY) == 0 ){ continue;}
+        UART0->UART_THR = dout[i];
 #ifdef DEBUG_MODE
         debug_log[debugLogCnt] = dout[i];
         debugLogCnt++;
@@ -78,7 +78,7 @@ void UART_tx(const uint8_t* const dout, uint8_t len)
  */
 void UART_rx(void)
 {
-    rx_buffer[rx_counter] = UART1->UART_RHR;
+    rx_buffer[rx_counter] = UART0->UART_RHR;
 #ifdef DEBUG_MODE
     debug_log[debugLogCnt] = rx_buffer[rx_counter];
     debugLogCnt++;

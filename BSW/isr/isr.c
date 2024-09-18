@@ -153,9 +153,9 @@ void ADC_Handler(void)
 /**
  * @brief Uart 1 ISR handler
  */
-void UART1_Handler( void )
+void UART0_Handler( void )
 {
-    if( UART1->UART_SR && UART_SR_RXRDY){
+    if( UART0->UART_SR && UART_SR_RXRDY){
         UART_rx();
     }
 }

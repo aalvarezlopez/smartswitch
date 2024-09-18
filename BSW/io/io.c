@@ -229,19 +229,19 @@ bool IO_q2(void)
 
 bool IO_isPIRactive(void)
 {
-    return PIOA->PIO_PDSR & PIO_PDSR_P9;
+    return PIOA->PIO_PDSR & PIO_PDSR_P18;
 }
 
 void IO_setLights(bool active)
 {
     if( active ){
-        PIOA->PIO_SODR = PIO_SODR_P10;
+        PIOA->PIO_SODR = PIO_SODR_P17;
     }else{
-        PIOA->PIO_CODR = PIO_CODR_P10;
+        PIOA->PIO_CODR = PIO_CODR_P17;
     }
 }
 
 bool IO_getLights(void)
 {
-    return PIOA->PIO_ODSR & PIO_ODSR_P10;
+    return PIOA->PIO_ODSR & PIO_ODSR_P17;
 }

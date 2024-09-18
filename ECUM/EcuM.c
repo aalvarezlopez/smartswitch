@@ -9,6 +9,7 @@
 #include "display.h"
 #include "enc28j60.h"
 #include "delays.h"
+#include "uart.h"
 
 #define ADC_PRESCAL_VALUE_2_MHz 96u
 
@@ -22,6 +23,7 @@ void EcuM_Startup_one(void)
 {
     ecum_configure_peripheral_clocks();
     ecum_configure_io_interfaces();
+    ecum_configure_uart_interface();
     ecum_configure_spi_interface();
     ecum_configure_pwm_interface();
     ecum_configure_analog_input_interface();
@@ -50,6 +52,9 @@ void EcuM_Startup_two(void)
     TCPIP_Init();
     Rtc_setTimeDate(22, 2, 2, 8, 15, 20);
 
+    UART_Init();
+
+    ISR_setInterruptEnable( UART0_IRQn, true);
     ISR_setInterruptEnable( ADC_IRQn, true);
     ISR_setInterruptEnable( PIOA_IRQn, true);
     ISR_setInterruptEnable( PIOB_IRQn, true);
@@ -94,15 +99,16 @@ void ecum_configure_io_interfaces(void)
 {
     PIOA->PIO_WPMR = PIO_WPMR_WPKEY_PASSWD;
 
-    PIOA->PIO_PER = PIO_PER_P0  | PIO_PER_P1  | PIO_PER_P2 |  PIO_PER_P6 |
-                    PIO_PER_P7  | PIO_PER_P8  | PIO_PER_P9 | PIO_PER_P10 |
+    PIOA->PIO_PER = PIO_PER_P0  | PIO_PER_P1  | PIO_PER_P2  | PIO_PER_P6  |
+                    PIO_PER_P7  | PIO_PER_P8  | PIO_PER_P17 | PIO_PER_P18 |
                     PIO_PER_P19 | PIO_PER_P20;
 
     PIOA->PIO_OER = PIO_PER_P0  | PIO_PER_P1  | PIO_PER_P2  | PIO_PER_P6 |
-                    PIO_PER_P7  | PIO_PER_P10;
+                    PIO_PER_P7  | PIO_PER_P17;
     PIOA->PIO_ODR = PIO_PER_P19;
 
     PIOA->PIO_PDR = PIO_PER_P4 | PIO_PER_P3;
+    PIOA->PIO_PDR = PIO_PER_P9 | PIO_PER_P10;
     PIOA->PIO_PDR = PIO_PER_P11 | PIO_PER_P12;
     PIOA->PIO_PDR = PIO_PER_P13 | PIO_PER_P14;
     PIOA->PIO_PDR = PIO_PER_P0 | PIO_PER_P1 | PIO_PER_P2 | PIO_PER_P7;
@@ -115,13 +121,13 @@ void ecum_configure_io_interfaces(void)
     PIOA->PIO_ABCDSR[1] &= ~PIO_ABCDSR_P4;
 
     PIOA->PIO_CODR = PIO_CODR_P0  | PIO_CODR_P1  | PIO_CODR_P2  | PIO_CODR_P6 |
-                     PIO_CODR_P7  | PIO_CODR_P10;
+                     PIO_CODR_P7  | PIO_CODR_P10 | PIO_CODR_P17;
     PIOA->PIO_SODR = PIO_SODR_P6;
 
-    PIOA->PIO_IER    = PIO_IER_P9 | PIO_IER_P8;
-    PIOA->PIO_PUER   = PIO_PUER_P9 | PIO_PUER_P8;
-    PIOA->PIO_IFER   = PIO_IFSR_P9 | PIO_IFSR_P8;
-    PIOA->PIO_IFSCER = PIO_IFSCDR_P9 | PIO_IFSCDR_P8;
+    PIOA->PIO_IER    = PIO_IER_P18 | PIO_IER_P8;
+    PIOA->PIO_PUER   = PIO_PUER_P18 | PIO_PUER_P8;
+    PIOA->PIO_IFER   = PIO_IFSR_P18 | PIO_IFSR_P8;
+    PIOA->PIO_IFSCER = PIO_IFSCDR_P18 | PIO_IFSCDR_P8;
 
     PIOA->PIO_WPMR = PIO_WPMR_WPEN |
                      PIO_WPMR_WPKEY_PASSWD;
@@ -193,21 +199,21 @@ void ecum_configure_spi_interface(void)
 
 
 /**
- * @brief Configure uart interface to communicate with ESP12(X)
+ * @brief Configure uart interface to communicate with extensions
  * RX -> PB2
  * TX -> PB3
  */
 void ecum_configure_uart_interface(void)
 {
-    PIOB->PIO_WPMR = PIO_WPMR_WPKEY_PASSWD;
+    PIOA->PIO_WPMR = PIO_WPMR_WPKEY_PASSWD;
     /*Assure Tx/Rx pins are selected for UART peripheral*/
-    PIOB->PIO_ABCDSR[0] &= ~(PIO_ABCDSR_P2);
-    PIOB->PIO_ABCDSR[1] &= ~(PIO_ABCDSR_P2);
+    PIOA->PIO_ABCDSR[0] &= ~(PIO_ABCDSR_P9);
+    PIOA->PIO_ABCDSR[1] &= ~(PIO_ABCDSR_P10);
 
-    PIOB->PIO_ABCDSR[0] &= ~(PIO_ABCDSR_P3);
-    PIOB->PIO_ABCDSR[1] &= ~(PIO_ABCDSR_P3);
+    PIOA->PIO_ABCDSR[0] &= ~(PIO_ABCDSR_P9);
+    PIOA->PIO_ABCDSR[1] &= ~(PIO_ABCDSR_P10);
 
-    PIOB->PIO_WPMR = PIO_WPMR_WPEN |
+    PIOA->PIO_WPMR = PIO_WPMR_WPEN |
                      PIO_WPMR_WPKEY_PASSWD;
 
 }
@@ -250,7 +256,7 @@ void ecum_configure_analog_input_interface(void)
 /**
  * @brief Enable peripheral clocks
  *
- * + ID8 for UART1
+ * + ID8 for UART0
  * + ID11 for PIOA
  * + ID12 for PIOB
  * + ID21 for SPI
@@ -261,7 +267,7 @@ void ecum_configure_peripheral_clocks(void)
 {
     /* Unlock PMC registers*/
     PMC->PMC_WPMR = PMC_WPMR_WPKEY_PASSWD;
-    PMC->PMC_PCER0 = PMC_PCER0_PID11 | PMC_PCER0_PID12 |
+    PMC->PMC_PCER0 = PMC_PCER0_PID8  | PMC_PCER0_PID11 | PMC_PCER0_PID12 |
                      PMC_PCER0_PID19 | PMC_PCER0_PID21 | PMC_PCER0_PID29 |
                      PMC_PCER0_PID31;
     /* Lock PMC registers*/

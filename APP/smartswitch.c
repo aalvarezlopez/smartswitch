@@ -14,6 +14,8 @@
 #include "rtc.h"
 #include "io.h"
 #include "str.h"
+#include "uart.h"
+#include "delays.h"
 
 bool smartswitch_roomActive = false;
 uint8_t darkness_level = 0;
@@ -34,6 +36,16 @@ void SmartSwitch_Init(void)
     IO_openRadiatorValve(0, false);
     IO_openRadiatorValve(1, false);
     IO_setLights(false);
+    for(uint8_t j = 0; j < 2; j++){
+        for(uint8_t i = 20; i < 100; i++){
+            IO_setDimmer(i);
+            delay_ms(10);
+        }
+        for(uint8_t i = 100; i > 20; i--){
+            IO_setDimmer(i);
+            delay_ms(10);
+        }
+    }
     IO_setDimmer(0);
 }
 
@@ -66,6 +78,8 @@ void SmartSwitch_Task(void)
                              (SMARTSWITCH_DARK_100 - SMARTSWITCH_DARK_0);
         }
     }
+
+    SmartSwitch_extensionComs();
 }
 
 void SmartSwitch_SlowTask(void)
@@ -95,7 +109,6 @@ void SmartSwitch_Action(bool presence,bool button)
         IO_setDimmer(0);
     }
     if( !button ){
-
         IO_setLights(!IO_getLights());
     }
 }
@@ -242,4 +255,10 @@ void smartswitch_getdate(date_st * date)
     BCD_TO_INT(hour_bcd, date->hour);
     BCD_TO_INT(min_bcd, date->min);
     BCD_TO_INT(sec_bcd, date->sec);
+}
+
+void SmartSwitch_extensionComs(void)
+{
+    char message= "SHS0987{dimmer:100}";
+    UART_tx( message, strlen(message));
 }

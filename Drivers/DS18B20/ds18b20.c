@@ -56,8 +56,10 @@ void DS18B20_Init(void)
         bool lastDevice;
         oneWire_reset(RAD_TEMP_IFACE);
         lastDevice = DS18B20_oneWireSearch(SEARCHROMCMD, RAD_TEMP_IFACE);
-        iface1_add[iface1_ndevs] = address;
-        iface1_ndevs++;
+        if( address != 0){
+            iface1_add[iface1_ndevs] = address;
+            iface1_ndevs++;
+        }
         if( lastDevice == true ){
             break;
         }
@@ -117,8 +119,9 @@ bool DS18B20_oneWireSearch(uint8_t romCommand, uint32_t iface)
         currentBitComp = oneWire_read_bit(iface);
 
         if (currentBit == 1 && currentBitComp == 1) {
+            /* No devices participating in search */
             lastDiscrepancy = 0;
-            return false;
+            return true;
         }else if (currentBit == 0 && currentBitComp == 0) {
             if (bitPosition == lastDiscrepancy) {
                 direction = 1;

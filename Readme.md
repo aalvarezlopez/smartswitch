@@ -16,8 +16,8 @@ monitor at91sam4 gpnvm set 1
 | Ethernet RESET      | PA6   | OUTPUT     |
 | DIMMER (PWM 200 Hz) | PA7   | OTUPUT     |
 | Touch sensor        | PA8   | INPUT (ISR)|
-| PIR switch          | PA9   | INPUT (ISR)|
-| Lights              | PA10  | OUTPUT     |
+| PIR switch          | PA18  | INPUT (ISR)|
+| Lights              | PA17  | OUTPUT     |
 | AIR\_TEMP\_SENSOR   | PA16  | IN/OUTPUT  |
 | LDR input           | PA19  | Anal. Input|
 | RAD temperature     | PA20  | IN/OUTPUT  |
