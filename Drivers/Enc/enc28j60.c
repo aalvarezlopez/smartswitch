@@ -61,12 +61,12 @@ uint8_t readOp (uint32_t op, uint32_t address)
         spicmd_tx[0] = op | ((address) & ADDR_MASK);
         spicmd_tx[1] = 0x00;
         spicmd_tx[2] = 0x00;
-        SPI_sync_transmission(3, spicmd_tx, spicmd_rx);
+        while(SPI_sync_transmission(3, spicmd_tx, spicmd_rx) == false){continue;}
         result = spicmd_rx[2];
     }else{
         spicmd_tx[0] = op | (address & ADDR_MASK);
         spicmd_tx[1] = 0x00;
-        SPI_sync_transmission(2, spicmd_tx, spicmd_rx);
+        while(SPI_sync_transmission(2, spicmd_tx, spicmd_rx) == false){continue;}
         result = spicmd_rx[1];
     }
     return result;
@@ -78,7 +78,7 @@ void writeOp (uint32_t op, uint32_t address, uint32_t data)
     uint8_t spicmd_rx[2];
     spicmd_tx[0] = op | (address & ADDR_MASK);
     spicmd_tx[1] = (uint8_t)data;
-    SPI_sync_transmission(2, spicmd_tx, spicmd_rx);
+    while(SPI_sync_transmission(2, spicmd_tx, spicmd_rx) == false){continue;}
 }
 
 void readBuf(uint16_t len, uint8_t *data)
@@ -88,7 +88,7 @@ void readBuf(uint16_t len, uint8_t *data)
         uint16_t remainingbytes = i + 15 > len ? len - i + 1 : 16;
         spicmd_tx[0] = ENC28J60_READ_BUF_MEM;
         spicmd_tx[1] = 0x00;
-        SPI_sync_transmission( remainingbytes, spicmd_tx, (uint8_t*)(data + i ));
+        while(SPI_sync_transmission( remainingbytes, spicmd_tx, (uint8_t*)(data + i )) == false){continue;}
         for(uint8_t j = 0; j < remainingbytes; j++){
             data[ i + j ] = data[ i + j + 1];
         }
@@ -104,7 +104,7 @@ void writeBuf(uint16_t len, const uint8_t *data)
         uint16_t remainingbytes = i + 15 > len ? len - i + 1 : 16;
         spicmd_tx[0] = ENC28J60_WRITE_BUF_MEM;
         memcpy( spicmd_tx + 1, data + i, remainingbytes - 1);
-        SPI_sync_transmission(remainingbytes, spicmd_tx, spicmd_rx);
+        while(SPI_sync_transmission(remainingbytes, spicmd_tx, spicmd_rx) == false){continue;}
     }
 }
 

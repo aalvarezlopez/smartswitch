@@ -21,6 +21,7 @@ bool smartswitch_roomActive = false;
 uint8_t darkness_level = 0;
 uint16_t radiatior_q[2] = {0, 0};
 uint32_t temp_target;
+bool isUsbAttached = false;
 
 typedef struct date_s{
     uint8_t year;
@@ -31,8 +32,14 @@ typedef struct date_s{
     uint8_t sec;
 } date_st;
 
+char SmartSwitch_cdc_buffer[APP_MAX_BUFF_LEN];
+char *SmartSwitch_cdc_buffer_head = 0;
+char *SmartSwitch_cdc_buffer_tail = 0;
+
 void SmartSwitch_Init(void)
 {
+    SmartSwitch_cdc_buffer_head = SmartSwitch_cdc_buffer;
+    SmartSwitch_cdc_buffer_tail = SmartSwitch_cdc_buffer;
     IO_openRadiatorValve(0, false);
     IO_openRadiatorValve(1, false);
     IO_setLights(false);
@@ -77,6 +84,11 @@ void SmartSwitch_Task(void)
             darkness_level = ((sum - SMARTSWITCH_DARK_0) * 100) /
                              (SMARTSWITCH_DARK_100 - SMARTSWITCH_DARK_0);
         }
+    }
+    if( SmartSwitch_cdc_buffer_head - SmartSwitch_cdc_buffer_tail > 10){
+        char str[] = "Hello";
+        SmartSwitch_cdc_tx(str);
+        SmartSwitch_cdc_buffer_tail = SmartSwitch_cdc_buffer_head;
     }
 
     SmartSwitch_extensionComs();
@@ -261,4 +273,37 @@ void SmartSwitch_extensionComs(void)
 {
     char message= "SHS0987{dimmer:100}";
     UART_tx( message, strlen(message));
+}
+
+void SmartSwitch_cdc_byte_ready(uint8_t port)
+{
+    if( SmartSwitch_cdc_buffer_head != 0 && port == 0){
+        while (udi_cdc_is_rx_ready()) {
+            *SmartSwitch_cdc_buffer_head = udi_cdc_getc();
+            SmartSwitch_cdc_buffer_head++;
+            if( (SmartSwitch_cdc_buffer_head - SmartSwitch_cdc_buffer) >= APP_MAX_BUFF_LEN ){
+                SmartSwitch_cdc_buffer_head = SmartSwitch_cdc_buffer;
+            }
+        }
+    }
+}
+
+void SmartSwitch_cdc_tx(char *str)
+{
+    udi_cdc_write_buf(str, strlen(str));
+}
+
+void SmartSwitch_cdc_suspend(void)
+{
+    isUsbAttached = false;
+}
+
+void SmartSwitch_cdc_resume(void)
+{
+    isUsbAttached = true;
+}
+
+bool SmartSwitch_getUsbStatus(void)
+{
+    return isUsbAttached;
 }

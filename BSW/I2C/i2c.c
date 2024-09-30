@@ -51,6 +51,7 @@ void I2C_Task(void)
 
 void I2C_sync_transmission(const uint8_t *data, uint8_t len)
 {
+    ISR_disableAllInterrupts();
     TWI0->TWI_MMR = 0x0000 |
                     TWI_MMR_IADRSZ_NONE |
                     TWI_MMR_DADR(0x3C);
@@ -64,4 +65,5 @@ void I2C_sync_transmission(const uint8_t *data, uint8_t len)
         continue;
     }
     TWI0->TWI_CR = TWI_CR_STOP;
+    ISR_enableAllInterrupts();
 }

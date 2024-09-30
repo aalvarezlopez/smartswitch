@@ -8,6 +8,7 @@
 
 #include <stdio.h>
 #include <stdint.h>
+#include <stdbool.h>
 #include "spi.h"
 #include "spi_cfg.h"
 #include "sam4s4a.h"
@@ -24,7 +25,8 @@ volatile uint32_t spiisr = 0;
 volatile uint32_t spiin = 0;
 volatile uint32_t spiout = 0;
 
-void SPI_Handler(void)
+
+void SPI_read(void)
 {
     spiin++;
     spiflags = 0x1515AAAA;
@@ -37,6 +39,11 @@ void SPI_Handler(void)
     }
     spiflags = 0x1515BBBB;
     spiout++;
+}
+
+void SPI_Handler(void)
+{
+    SPI_read();
 }
 
 /**
@@ -61,8 +68,6 @@ void SPI_Init(void)
     SPI->SPI_CR = SPI_CR_SPIEN;
 
     SPI->SPI_WPMR = SPI_WPMR_WPKEY_PASSWD | SPI_WPMR_WPEN;
-    NVIC_SetPriority((IRQn_Type) ID_SPI, 5);
-    ISR_setInterruptEnable((IRQn_Type) ID_SPI, true);
     SPI->SPI_IER = SPI_IER_RDRF;
 }
 
@@ -85,10 +90,11 @@ void SPI_Task(void)
  */
 volatile uint32_t iteration = 0;
 
-void SPI_sync_transmission(uint16_t len, const uint8_t* const txbuff,
+bool SPI_sync_transmission(uint16_t len, const uint8_t* const txbuff,
                            uint8_t* const rxbuff)
 {
     uint32_t txtemp;
+    bool result = true;
     ptrdout = rxbuff;
     rcvFrames = 0;
     spiflags = 0xBABEAAAA;
@@ -104,13 +110,26 @@ void SPI_sync_transmission(uint16_t len, const uint8_t* const txbuff,
             iteration++;
             if(iteration > SPI_MAX_ITER){
                 errorlog_reportError( SPI_MODULE, NULL, 0);
+                result = false;
                 break;
+            }
+            if( (SPI->SPI_SR & SPI_SR_RDRF) != 0){
+                SPI_read();
             }
         }
         txtemp = (uint32_t)txbuff[i];
         SPI->SPI_TDR = txtemp;
         spitx ++;
+        if( (SPI->SPI_SR & SPI_SR_RDRF) != 0){
+            SPI_read();
+        }
     }
-    while(rcvFrames < len){ continue; }
+    iteration = 0;
+    while(rcvFrames < len){ 
+        if( (SPI->SPI_SR & SPI_SR_RDRF) != 0){
+            SPI_read();
+        }
+    }
     spiflags = 0xBABEBBBB;
+    return result;
 }

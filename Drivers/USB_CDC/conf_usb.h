@@ -60,8 +60,8 @@
 
 //! USB Device string definitions (Optional)
 #define  USB_DEVICE_MANUFACTURE_NAME      "Viquina"
-#define  USB_DEVICE_PRODUCT_NAME          "Viquina fluid handy devic "
-#define  USB_DEVICE_SERIAL_NAME           "VIQ12"
+#define  USB_DEVICE_PRODUCT_NAME          "SmartHomeSwitch"
+#define  USB_DEVICE_SERIAL_NAME           "VIQSHS"
 
 
 /**
@@ -84,10 +84,10 @@
 // extern void user_callback_vbus_action(bool b_vbus_high);
 // #define  UDC_SOF_EVENT()                  user_callback_sof_action()
 // extern void user_callback_sof_action(void);
-// #define  UDC_SUSPEND_EVENT()              user_callback_suspend_action()
-// extern void user_callback_suspend_action(void);
-// #define  UDC_RESUME_EVENT()               user_callback_resume_action()
-// extern void user_callback_resume_action(void);
+#define  UDC_SUSPEND_EVENT()              SmartSwitch_cdc_suspend()
+extern void SmartSwitch_cdc_suspend(void);
+#define  UDC_RESUME_EVENT()               SmartSwitch_cdc_resume()
+extern void SmartSwitch_cdc_resume(void);
 // Mandatory when USB_DEVICE_ATTR authorizes remote wakeup feature
 // #define  UDC_REMOTEWAKEUP_ENABLE()        user_callback_remotewakeup_enable()
 // extern void user_callback_remotewakeup_enable(void);
@@ -116,7 +116,7 @@
 //! Interface callback definition
 #define  UDI_CDC_ENABLE_EXT(port)          true
 #define  UDI_CDC_DISABLE_EXT(port)
-#define  UDI_CDC_RX_NOTIFY(port)            FluidCtr_cdc_byte_ready(port)
+#define  UDI_CDC_RX_NOTIFY(port)            SmartSwitch_cdc_byte_ready(port)
 #define  UDI_CDC_TX_EMPTY_NOTIFY(port)
 #define  UDI_CDC_SET_CODING_EXT(port,cfg)
 #define  UDI_CDC_SET_DTR_EXT(port,set)

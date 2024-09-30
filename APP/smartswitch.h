@@ -13,6 +13,8 @@
 
 #define MAX_WATER_TEMP_SENSORS 4u
 
+#define APP_MAX_BUFF_LEN 512u
+
 void SmartSwitch_Init(void);
 void SmartSwitch_Task(void);
 void SmartSwitch_SlowTask(void);
@@ -22,6 +24,7 @@ void SmartSwitch_broadcastMessage(char * const msg);
 void SmartSwitch_statusMessage(char * const msg);
 void SmartSwitch_newFrame(const uint8_t * msg, char * rply);
 void SmartSwitch_extensionComs(void);
-
-
+void SmartSwitch_cdc_tx(char *str);
+void SmartSwitch_cdc_byte_ready(uint8_t port);
+bool SmartSwitch_getUsbStatus(void);
 #endif

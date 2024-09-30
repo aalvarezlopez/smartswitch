@@ -6,6 +6,8 @@
 #include "spi.h"
 #include "smartswitch.h"
 #include "isr.h"
+#include "udd.h"
+#include "udc.h"
 #include "display.h"
 #include "enc28j60.h"
 #include "delays.h"
@@ -21,6 +23,7 @@ uint32_t system_tick_counter_ref = 0;
  */
 void EcuM_Startup_one(void)
 {
+    udd_detach();
     ecum_configure_peripheral_clocks();
     ecum_configure_io_interfaces();
     ecum_configure_uart_interface();
@@ -58,6 +61,15 @@ void EcuM_Startup_two(void)
     ISR_setInterruptEnable( ADC_IRQn, true);
     ISR_setInterruptEnable( PIOA_IRQn, true);
     ISR_setInterruptEnable( PIOB_IRQn, true);
+    udc_start();
+    udd_send_remotewakeup();
+
+    ISR_setInterruptPriority(UART0_IRQn, 3);
+    ISR_setInterruptPriority(ADC_IRQn, 6);
+    ISR_setInterruptPriority(PIOA_IRQn, 5);
+    ISR_setInterruptPriority(PIOB_IRQn, 5);
+    ISR_setInterruptPriority(ID_SPI, 2);
+    ISR_setInterruptPriority(ID_UDP, 4);
 }
 
 uint32_t EcuM_GetCurrentCounter(void)
@@ -270,6 +282,7 @@ void ecum_configure_peripheral_clocks(void)
     PMC->PMC_PCER0 = PMC_PCER0_PID8  | PMC_PCER0_PID11 | PMC_PCER0_PID12 |
                      PMC_PCER0_PID19 | PMC_PCER0_PID21 | PMC_PCER0_PID29 |
                      PMC_PCER0_PID31;
+    PMC->PMC_PCER1 = PMC_PCER1_PID34;
     /* Lock PMC registers*/
     PMC->PMC_WPMR =   PMC_WPMR_WPEN |
                       PMC_WPMR_WPKEY_PASSWD;

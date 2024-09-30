@@ -75,6 +75,26 @@ void ISR_setInterruptEnable(uint8_t isrNumber, bool state)
         NVIC->ICER[(((uint32_t)isrNumber) >> 5UL)] = (uint32_t)(1UL << (((uint32_t)isrNumber) & 0x1FUL));
     }
 }
+
+
+/**
+ * @brief Set interrupt level for this interruption
+ *
+ * @param isrNumber Interruption that will be modified
+ * @param priority Priority level. The lower the value, the higher the priority. Valid values are 0-15,
+ * only bits 7-4 are considered.
+ */
+void ISR_setInterruptPriority(uint8_t isrNumber, uint8_t priority)
+{
+    uint8_t *ptrToIPRx;
+    if( priority > 15){
+        priority = 15;
+    }
+    ptrToIPRx = NVIC->IP[(((uint32_t)isrNumber) >> 5UL)];
+    ptrToIPRx += (isrNumber % 4);
+    ptrToIPRx = priority << 4;
+}
+
 void NMI_Handler(void)
 {
     while (1) {
@@ -165,6 +185,7 @@ void UART0_Handler( void )
  */
 void UDP_Handler(void)
 {
+    udp_isr_handler();
 }
 
 void RTC_Handler(void)
