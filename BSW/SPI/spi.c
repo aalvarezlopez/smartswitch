@@ -129,6 +129,13 @@ bool SPI_sync_transmission(uint16_t len, const uint8_t* const txbuff,
         if( (SPI->SPI_SR & SPI_SR_RDRF) != 0){
             SPI_read();
         }
+        iteration++;
+        if(iteration > SPI_MAX_ITER){
+            errorlog_reportError( SPI_MODULE, NULL, 0);
+            result = false;
+            break;
+        }
+        delay_us(1);
     }
     spiflags = 0xBABEBBBB;
     return result;
