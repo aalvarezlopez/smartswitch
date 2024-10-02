@@ -22,6 +22,8 @@ uint8_t darkness_level = 0;
 uint16_t radiatior_q[2] = {0, 0};
 uint32_t temp_target;
 bool isUsbAttached = false;
+uint8_t ipaddress[4] = {192, 168, 1, 117};
+uint16_t deviceid = 0;
 
 typedef struct date_s{
     uint8_t year;
@@ -63,6 +65,7 @@ void SmartSwitch_Task(void)
     uint8_t nsamples = 0;
     uint16_t lightsensor_raw = 0;
     uint32_t sum =0;
+    bool result = false;
     smartswitch_roomActive = IO_isPIRactive();
     if ( IO_getLastAcquiredValue( SMARTSWITCH_LIGHTSENSOR_ADC_CH, &lightsensor_raw) ){
         lightsensor_mean[nsamples % 5] = lightsensor_raw;
@@ -85,10 +88,26 @@ void SmartSwitch_Task(void)
                              (SMARTSWITCH_DARK_100 - SMARTSWITCH_DARK_0);
         }
     }
-    if( SmartSwitch_cdc_buffer_head - SmartSwitch_cdc_buffer_tail > 10){
-        char str[] = "Hello";
-        SmartSwitch_cdc_tx(str);
-        SmartSwitch_cdc_buffer_tail = SmartSwitch_cdc_buffer_head;
+    if( SmartSwitch_cdc_buffer_head != SmartSwitch_cdc_buffer_tail){
+        if(SmartSwitch_cdc_buffer_head > SmartSwitch_cdc_buffer_tail ){
+            result = smartswitch_cfg_msg(SmartSwitch_cdc_buffer_tail,
+                SmartSwitch_cdc_buffer_head - SmartSwitch_cdc_buffer_tail);
+        }else{
+            char temp[APP_MAX_BUFF_LEN];
+            uint8_t *ptr;
+            uint16_t size = APP_MAX_BUFF_LEN - ( SmartSwitch_cdc_buffer_tail - SmartSwitch_cdc_buffer);
+            memcpy( temp, SmartSwitch_cdc_buffer_tail,
+                size);
+            memcpy( temp + size - 1,  SmartSwitch_cdc_buffer,
+                (uint16_t)(SmartSwitch_cdc_buffer_head - SmartSwitch_cdc_buffer)); 
+            size += (SmartSwitch_cdc_buffer_head - SmartSwitch_cdc_buffer);
+            result = smartswitch_cfg_msg(temp, size);
+        }
+        SmartSwitch_cdc_buffer_tail += result;
+        if( SmartSwitch_cdc_buffer_tail >= ( SmartSwitch_cdc_buffer + APP_MAX_BUFF_LEN)){
+            SmartSwitch_cdc_buffer_tail = SmartSwitch_cdc_buffer +
+                (SmartSwitch_cdc_buffer_tail - SmartSwitch_cdc_buffer + APP_MAX_BUFF_LEN);
+        }
     }
 
     SmartSwitch_extensionComs();
@@ -271,7 +290,7 @@ void smartswitch_getdate(date_st * date)
 
 void SmartSwitch_extensionComs(void)
 {
-    char message= "SHS0987{dimmer:100}";
+    char message[]= "SHS0987{dimmer:100}";
     UART_tx( message, strlen(message));
 }
 
@@ -306,4 +325,61 @@ void SmartSwitch_cdc_resume(void)
 bool SmartSwitch_getUsbStatus(void)
 {
     return isUsbAttached;
+}
+
+
+/**
+ * @brief Read the bytes recevied and look for the valid configuration
+ * pattern. First byte is '#' follow by 4 groups of 3 digits each. Next char
+ * should be '$' and then another group of 3 digits. Where the first 4 groups
+ * are the ip address and the last one the device Id.
+ *
+ * #xxxxxxxxxxxx$yyy#. Where x is the ip and y the number ID.
+ *
+ * Message example: #192168001137$001#
+ *
+ * @param msg Recevied message
+ * @param len Number of received bytes
+ *
+ * @return 
+ */
+uint16_t smartswitch_cfg_msg(char *msg, uint16_t len)
+{
+    bool result;
+    for(uint8_t i = 0; i < len; i++){
+        if( msg[i] == '#' ){
+            if( (len - i) >= USB_CFG_MSG_LEN ){
+                if( msg[i+USB_CFG_SPLIT_CHAR_POS] == '$' &&
+                    msg[i + USB_CFG_MSG_LEN - 1] == '#'){
+                    char str[] = "ACK";
+                    char decimalst[4] = {0, 0, 0, 0};
+                    strncpy(decimalst, msg + i + 1, 3);
+                    ipaddress[0] = atoi(decimalst);
+                    strncpy(decimalst, msg + i + 4, 3);
+                    ipaddress[1] = atoi(decimalst);
+                    strncpy(decimalst, msg + i + 7, 3);
+                    ipaddress[2] = atoi(decimalst);
+                    strncpy(decimalst, msg + i + 10, 3);
+                    ipaddress[3] = atoi(decimalst);
+                    deviceid = atoi(msg + i + USB_CFG_SPLIT_CHAR_POS + 1);
+                    SmartSwitch_cdc_tx(str);
+                    result = true;
+                }
+            }
+        }
+        if( i > 0 && msg[i-1] == '#' && msg[i] == '?' && result == false ){
+            char str[USB_CFG_MSG_LEN+1];
+            int_to_str(str+1, ipaddress[0], 3);
+            int_to_str(str+4, ipaddress[1], 3);
+            int_to_str(str+7, ipaddress[2], 3);
+            int_to_str(str+10, ipaddress[3], 3);
+            int_to_str(str+14, deviceid, 3);
+            str[13] = '$';
+            str[0] = '#';
+            str[17] = '#';
+            str[18] = 0;
+            SmartSwitch_cdc_tx(str);
+        }
+    }
+    return result;
 }

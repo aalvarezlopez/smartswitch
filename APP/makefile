@@ -1,10 +1,10 @@
 CC = gcc
 
-TARGET := test_FluidCtrl
+TARGET := test_SmartHomeSwitch
 
-TESTSRC := ./utest_fluid_ctrl.c
-SRC     := ./fluid_ctrl.c
-MOKSRC  := ./mok/mok_fluid_ctrl.c
+TESTSRC := ./utest_smartswitch.c
+SRC     := ./smartswitch.c ../misc/str.c
+MOKSRC  := ./mok/mok_smartswitch.c
 
 include ../utest_makefile.common
 

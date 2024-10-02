@@ -15,6 +15,9 @@
 
 #define APP_MAX_BUFF_LEN 512u
 
+#define USB_CFG_MSG_LEN 18u
+#define USB_CFG_SPLIT_CHAR_POS 13u
+
 void SmartSwitch_Init(void);
 void SmartSwitch_Task(void);
 void SmartSwitch_SlowTask(void);
@@ -27,4 +30,7 @@ void SmartSwitch_extensionComs(void);
 void SmartSwitch_cdc_tx(char *str);
 void SmartSwitch_cdc_byte_ready(uint8_t port);
 bool SmartSwitch_getUsbStatus(void);
+uint16_t smartswitch_cfg_msg(char *msg, uint16_t len); 
+
+
 #endif
