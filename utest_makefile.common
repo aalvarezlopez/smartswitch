@@ -1,0 +1,45 @@
+TESTOBJ := $(TESTSRC:%.c=%.o)
+OBJ     := $(SRC:%.c=%.o)
+MOKOBJ  := $(MOKSRC:%.c=%.o)
+
+CFLAGS += -I./mok -I. -D_STATIC= -g  --coverage -fprofile-arcs -ftest-coverage
+LFLAGS += -lgcov -lrt --coverage -g -lcunit
+
+report_file ?= "./unitest.log"
+
+.phony: clean all run coverage prerun init
+
+all: init clean prerun $(TARGET) run coverage
+
+init:
+	@echo "\e[1;32m\n\n# *****************************************************"
+	@echo "Building Unit Test for $(TARGET)"
+	@echo "\e[0m"
+
+$(TARGET): $(OBJ) $(TESTOBJ) $(MOKOBJ)
+	@$(CC) $^ -o $@ $(LFLAGS)
+
+$(TESTOBJ):$(TESTSRC)
+	@echo "Compiling \e[1;34m$@\e[0m"
+	@$(CC) $^ -o $@  -c -I./mok -D$(basename $^) -g
+
+../misc/%.o: ../misc/%.c
+%.o:%.c
+	@echo "Compiling \e[0;34m$@\e[0m"
+	@$(CC) $^ -o $@  -c $(CFLAGS) -g
+
+
+clean:
+	@find ./ -name "*.o" -delete
+	@rm -f ./$(TARGET)
+
+run:
+	@echo "\n\n#Executing $(TESTOBJ) report#\n\n" >> $(report_file)
+	@echo "\e[1;36m\n# Running unit test $(TARGET)"
+	@./$(TARGET) | tee -a $(report_file)
+	@echo "\e[0m"
+
+coverage:
+	@lcov -q --capture --directory ./ --output-file coverage.info
+	@genhtml coverage.info --output-directory out -q
+	@gcov -abncu $(SRC) | tee -a  $(report_file)

@@ -1,2 +1,7 @@
 *.txt
 *.s19
+*.gcda
+*.gcno
+*.xml
+APP/coverage.info
+**/out
