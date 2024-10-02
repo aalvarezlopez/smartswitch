@@ -5,3 +5,4 @@
 *.xml
 APP/coverage.info
 **/out
+APP/test_SmartHomeSwitch
