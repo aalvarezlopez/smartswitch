@@ -8,38 +8,24 @@
 
 #include "stdint.h"
 #include "str.h"
-#include "string.h"
 #include <stdlib.h>
 #include <stdbool.h>
 
 #define DIGIT_MAX_LENGTH 10
 
-void __atoi(uint16_t n, char *s)
+uint16_t __atoi( char *s)
 {
-    uint16_t index = 0;
-    char tempStr[DIGIT_MAX_LENGTH];
-    for(uint16_t i = 0; i < STR_N_DIGITS; i++){
-        s[i] = 0;
-    }
-    if(n == 0){
-        s[0] = '0';
-        s[1] = 0;
-    }else{
-        tempStr[0] = '0';
-        while(n > 0){
-            tempStr[index] = '0' + (n % 10);
-            n /= 10;
-            index++;
-            if(index > STR_N_DIGITS){
-                break;
-            }
+    uint16_t result = 0;
+    while( *s != 0){
+        if ( *s >= '0' && *s <= '9' ){
+            result *= 10;
+            result += *s - '0';
+        }else{
+            break;
         }
-        tempStr[index] = 0;
-        for(uint8_t i = index; i > 0; i--){
-            s[i - 1] = tempStr[index - i];
-        }
-        s[index] = 0;
+        s++;
     }
+    return result;
 }
 
 void* memset(void *dst, int value, size_t len)
@@ -51,12 +37,12 @@ void* memset(void *dst, int value, size_t len)
     return (dst + i);
 }
 
-void* memcpy_P(void *dst, const void *src, size_t len)
+void* memcpy_P(void *dst, const void *src, uint16_t len)
 {
     memcpy(dst, src, len);
 }
 
-void* memcpy(void *dst, const void *src, size_t len)
+void* memcpy(void *dst, const void *src, uint16_t len)
 {
     uint16_t i;
     for( i = 0 ; i < len; i++){
@@ -87,6 +73,22 @@ char* strcpy(char *dst, const char *src)
     while( *(pointer) != 0){
         *(dst + (pointer - src)) = *(src + (pointer - src));
         pointer++;
+    }
+    *(dst + (pointer - src)) = 0;
+    return pointer;
+}
+
+char* strncpy(char *dst, const char *src, uint16_t n)
+{
+    char *pointer = src;
+    uint8_t len = 0;
+    while( *(pointer) != 0){
+        *(dst + (pointer - src)) = *(src + (pointer - src));
+        pointer++;
+        len++;
+        if( len >= n ){
+            break;
+        }
     }
     *(dst + (pointer - src)) = 0;
     return pointer;

@@ -65,7 +65,7 @@ void SmartSwitch_Task(void)
     uint8_t nsamples = 0;
     uint16_t lightsensor_raw = 0;
     uint32_t sum =0;
-    bool result = false;
+    uint16_t result = false;
     smartswitch_roomActive = IO_isPIRactive();
     if ( IO_getLastAcquiredValue( SMARTSWITCH_LIGHTSENSOR_ADC_CH, &lightsensor_raw) ){
         lightsensor_mean[nsamples % 5] = lightsensor_raw;
@@ -345,7 +345,7 @@ bool SmartSwitch_getUsbStatus(void)
  */
 uint16_t smartswitch_cfg_msg(char *msg, uint16_t len)
 {
-    bool result;
+    uint16_t result = 0;
     for(uint8_t i = 0; i < len; i++){
         if( msg[i] == '#' ){
             if( (len - i) >= USB_CFG_MSG_LEN ){
@@ -354,20 +354,20 @@ uint16_t smartswitch_cfg_msg(char *msg, uint16_t len)
                     char str[] = "ACK";
                     char decimalst[4] = {0, 0, 0, 0};
                     strncpy(decimalst, msg + i + 1, 3);
-                    ipaddress[0] = atoi(decimalst);
+                    ipaddress[0] = __atoi(decimalst);
                     strncpy(decimalst, msg + i + 4, 3);
-                    ipaddress[1] = atoi(decimalst);
+                    ipaddress[1] = __atoi(decimalst);
                     strncpy(decimalst, msg + i + 7, 3);
-                    ipaddress[2] = atoi(decimalst);
+                    ipaddress[2] = __atoi(decimalst);
                     strncpy(decimalst, msg + i + 10, 3);
-                    ipaddress[3] = atoi(decimalst);
-                    deviceid = atoi(msg + i + USB_CFG_SPLIT_CHAR_POS + 1);
+                    ipaddress[3] = __atoi(decimalst);
+                    deviceid = __atoi(msg + i + USB_CFG_SPLIT_CHAR_POS + 1);
                     SmartSwitch_cdc_tx(str);
-                    result = true;
+                    result = i + USB_CFG_MSG_LEN;
                 }
             }
         }
-        if( i > 0 && msg[i-1] == '#' && msg[i] == '?' && result == false ){
+        if( i > 0 && msg[i-1] == '#' && msg[i] == '?'){
             char str[USB_CFG_MSG_LEN+1];
             int_to_str(str+1, ipaddress[0], 3);
             int_to_str(str+4, ipaddress[1], 3);
@@ -379,6 +379,7 @@ uint16_t smartswitch_cfg_msg(char *msg, uint16_t len)
             str[17] = '#';
             str[18] = 0;
             SmartSwitch_cdc_tx(str);
+            result = i + 1;
         }
     }
     return result;
