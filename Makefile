@@ -6,11 +6,18 @@ UNIT_TEST_REPORT := ./unit_test_report.txt
 TESTSRC := ./APP/utest_smartswitch.c
 TESTOBJ := $(TESTSRC:%.c=%.o)
 
+YEAR  := $(shell date +%y)
+MONTH := $(shell date +%m)
+PATCH := 0
+
 SRCS := ./main.c
 SRCS += ./ECUM/EcuM.c ./BSW/SPI/spi.c ./BSW/uart/uart.c ./BSW/io/io.c ./BSW/I2C/i2c.c
 SRCS += ./BSW/errorlog/errorlog.c
 SRCS += ./BSW/isr/isr.c
 SRCS += ./BSW/rtc/rtc.c
+SRCS += ./BSW/flash/efc.c
+SRCS += ./BSW/flash/flash_efc.c
+SRCS += ./BSW/nvm/nvm.c
 SRCS += ./BSW/Eth/EtherCard.c
 SRCS += ./BSW/Eth/tcpip.c
 SRCS += ./BSW/Eth/arp.c

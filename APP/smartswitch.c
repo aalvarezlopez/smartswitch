@@ -16,14 +16,14 @@
 #include "str.h"
 #include "uart.h"
 #include "delays.h"
+#include "nvm.h"
 
 bool smartswitch_roomActive = false;
 uint8_t darkness_level = 0;
 uint16_t radiatior_q[2] = {0, 0};
 uint32_t temp_target;
 bool isUsbAttached = false;
-uint8_t ipaddress[4] = {192, 168, 1, 117};
-uint16_t deviceid = 0;
+static nvmSettings_st settings;
 
 typedef struct date_s{
     uint8_t year;
@@ -56,6 +56,15 @@ void SmartSwitch_Init(void)
         }
     }
     IO_setDimmer(0);
+
+    if(NvM_ReadBlock( 1, sizeof(settings), 1, (uint8_t*)(&settings)) == 0){
+        settings.ip[0] = 192;
+        settings.ip[0] = 168;
+        settings.ip[0] = 1;
+        settings.ip[0] = 137;
+        settings.id = 999;
+        NvM_Write((uint32_t*)(&settings), 1);
+    }
 }
 
 
@@ -354,26 +363,27 @@ uint16_t smartswitch_cfg_msg(char *msg, uint16_t len)
                     char str[] = "ACK";
                     char decimalst[4] = {0, 0, 0, 0};
                     strncpy(decimalst, msg + i + 1, 3);
-                    ipaddress[0] = __atoi(decimalst);
+                    settings.ip[0] = __atoi(decimalst);
                     strncpy(decimalst, msg + i + 4, 3);
-                    ipaddress[1] = __atoi(decimalst);
+                    settings.ip[1] = __atoi(decimalst);
                     strncpy(decimalst, msg + i + 7, 3);
-                    ipaddress[2] = __atoi(decimalst);
+                    settings.ip[2] = __atoi(decimalst);
                     strncpy(decimalst, msg + i + 10, 3);
-                    ipaddress[3] = __atoi(decimalst);
-                    deviceid = __atoi(msg + i + USB_CFG_SPLIT_CHAR_POS + 1);
+                    settings.ip[3] = __atoi(decimalst);
+                    settings.id= __atoi(msg + i + USB_CFG_SPLIT_CHAR_POS + 1);
                     SmartSwitch_cdc_tx(str);
                     result = i + USB_CFG_MSG_LEN;
+                    NvM_Write((uint32_t*)(&settings), 1);
                 }
             }
         }
         if( i > 0 && msg[i-1] == '#' && msg[i] == '?'){
             char str[USB_CFG_MSG_LEN+1];
-            int_to_str(str+1, ipaddress[0], 3);
-            int_to_str(str+4, ipaddress[1], 3);
-            int_to_str(str+7, ipaddress[2], 3);
-            int_to_str(str+10, ipaddress[3], 3);
-            int_to_str(str+14, deviceid, 3);
+            int_to_str(str+1, settings.ip[0], 3);
+            int_to_str(str+4, settings.ip[1], 3);
+            int_to_str(str+7, settings.ip[2], 3);
+            int_to_str(str+10, settings.ip[3], 3);
+            int_to_str(str+14, settings.id, 3);
             str[13] = '$';
             str[0] = '#';
             str[17] = '#';
