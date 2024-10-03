@@ -25,7 +25,7 @@
 
 #include "stdio.h"
 #include "stdint.h"
-#include "string.h"
+#include "str.h"
 #include "nvm.h"
 #include "flash_efc.h"
 #include "efc.h"

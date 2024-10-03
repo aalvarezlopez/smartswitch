@@ -1,5 +1,5 @@
-CC = /opt/gcc-arm-none-eabi/bin/arm-none-eabi-gcc
-LD = /opt/gcc-arm-none-eabi/bin/arm-none-eabi-ld
+CC = arm-none-eabi-gcc
+LD = arm-none-eabi-ld
 
 UNIT_TEST_REPORT := ./unit_test_report.txt
 
@@ -54,16 +54,17 @@ INCLUDES += -I./APP/
 INCLUDES += -I./misc/
 
 LD_SCRIPT = ./flash.ld
-CFLAGS = -ggdb -mthumb -mcpu=cortex-m4 -D__SAM4S4A__
-CFLAGS += -O0 -MD -std=c99 -c -fno-builtin
+CFLAGS = -ggdb -mthumb -mcpu=cortex-m4 -D__SAM4S4A__ -fno-builtin
+CFLAGS += -Os -MD -std=c99 -c
 CFLAGS += $(INCLUDES)
-LDFLAGS = -T $(LD_SCRIPT) -e Reset_Handler
+LDFLAGS = -T $(LD_SCRIPT) -e Reset_Handler --print-memory-usage
 
 .PHONY: all clean test style
 
 all: $(OBJECTS)
-	@echo "Building"
+	@echo "\e[1;32mBuilding\e[1;34m"
 	$(LD) -o ./smartSwitch.elf $(OBJECTS) $(LDFLAGS)
+	@echo "\e[0m"
 
 -include $(OBJECTS:.o=.d)
 
@@ -72,8 +73,8 @@ clean:
 	@rm -f ./smartSwitch.elf
 
 %.o: %.c
-	@echo "Compiling $@"
-	$(CC) $(CFLAGS)  $< -o $@
+	@echo "Compiling \e[1;32m$@\e[0m"
+	@$(CC) $(CFLAGS)  $< -o $@
 
 test:
 	@echo "Unit test execution date " > $(UNIT_TEST_REPORT)

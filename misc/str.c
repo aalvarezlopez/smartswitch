@@ -7,12 +7,21 @@
  */
 
 #include "stdint.h"
+#include "stdio.h"
 #include "str.h"
 #include <stdlib.h>
 #include <stdbool.h>
 
 #define DIGIT_MAX_LENGTH 10
+int isdigit(int);
 
+
+/**
+ * @brief Convert unsigned integer to string
+ *
+ * @param n Unsigned integer to convert
+ * @param s Output string
+ */
 uint16_t __atoi( char *s)
 {
     uint16_t result = 0;
@@ -28,6 +37,16 @@ uint16_t __atoi( char *s)
     return result;
 }
 
+
+/**
+ * @brief Set byte to byte the memory starting from the pointer to the defined value
+ *
+ * @param dst Pointer to the memory to be set
+ * @param value Value to be set
+ * @param len Number of bytes to set
+ *
+ * @return  Pointer to the last element set
+ */
 void* memset(void *dst, int value, size_t len)
 {
     uint16_t i;
@@ -37,10 +56,6 @@ void* memset(void *dst, int value, size_t len)
     return (dst + i);
 }
 
-void* memcpy_P(void *dst, const void *src, uint16_t len)
-{
-    memcpy(dst, src, len);
-}
 
 void* memcpy(void *dst, const void *src, uint16_t len)
 {
@@ -53,7 +68,7 @@ void* memcpy(void *dst, const void *src, uint16_t len)
 
 char* strcat(char *dst, const char *src)
 {
-    char *pointerSrc = src;
+    const char *pointerSrc = src;
     char *pointerDst = dst;
     while( *(pointerDst) != 0){
         pointerDst++;
@@ -69,15 +84,14 @@ char* strcat(char *dst, const char *src)
 
 char* strcpy(char *dst, const char *src)
 {
-    char *pointer = src;
+    const char *pointer = src;
     while( *(pointer) != 0){
         *(dst + (pointer - src)) = *(src + (pointer - src));
         pointer++;
     }
     *(dst + (pointer - src)) = 0;
-    return pointer;
+    return (char*)pointer;
 }
-
 char* strncpy(char *dst, const char *src, uint16_t n)
 {
     char *pointer = src;
@@ -96,7 +110,7 @@ char* strncpy(char *dst, const char *src, uint16_t n)
 
 size_t strlen(const char *str)
 {
-    char *pointer = str;
+    const char *pointer = str;
     while( *(pointer) != 0){
         pointer++;
     }
@@ -105,8 +119,8 @@ size_t strlen(const char *str)
 
 char* strstr(const char *str1, const char *str2)
 {
-    char *init = 0;
-    char *pointer = str1;
+    const char *init = 0;
+    const char *pointer = str1;
     while( *(pointer) != 0){
         if( init == 0 ){
             if((*(pointer) == *(str2) )){
@@ -123,9 +137,8 @@ char* strstr(const char *str1, const char *str2)
     if( (pointer - init) < strlen(str2)){
         init = 0;
     }
-    return init;
+    return (char*)init;
 }
-
 bool isDigit( unsigned char c)
 {
     bool result = false;

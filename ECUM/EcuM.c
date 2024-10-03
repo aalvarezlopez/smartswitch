@@ -30,6 +30,8 @@ void EcuM_Startup_one(void)
     ecum_configure_spi_interface();
     ecum_configure_pwm_interface();
     ecum_configure_analog_input_interface();
+    NvM_Init();
+    NvM_ReadAll();
 
     IO_PWM_Init();
 

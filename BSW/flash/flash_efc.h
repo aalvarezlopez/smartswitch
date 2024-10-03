@@ -99,11 +99,8 @@ uint32_t flash_erase_all(uint32_t ul_address);
 uint32_t flash_erase_plane(uint32_t ul_address);
 #endif
 
-#if (SAM4S || SAM4E || SAM4N || SAM4C || SAMG || SAM4CP || SAM4CM || \
-	 SAMV71 || SAMV70 || SAMS70 || SAME70)
 uint32_t flash_erase_page(uint32_t ul_address, uint8_t uc_page_num);
 uint32_t flash_erase_sector(uint32_t ul_address);
-#endif
 
 uint32_t flash_write(uint32_t ul_address, const void *p_buffer,
 		uint32_t ul_size, uint32_t ul_erase_flag);

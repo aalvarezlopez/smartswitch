@@ -7,16 +7,17 @@
  */
 
 #include "stdio.h"
+#include "stdlib.h"
 #include "stdbool.h"
 #include "smartswitch.h"
 #include "smartswitch_pri.h"
 #include "smartswitch_cfg.h"
 #include "rtc.h"
 #include "io.h"
-#include "str.h"
 #include "uart.h"
 #include "delays.h"
 #include "nvm.h"
+#include "str.h"
 
 bool smartswitch_roomActive = false;
 uint8_t darkness_level = 0;
@@ -57,7 +58,7 @@ void SmartSwitch_Init(void)
     }
     IO_setDimmer(0);
 
-    if(NvM_ReadBlock( 1, sizeof(settings), 1, (uint8_t*)(&settings)) == 0){
+    if(NvM_ReadBlock( 0, sizeof(settings), 1, (uint8_t*)(&settings)) == 0){
         settings.ip[0] = 192;
         settings.ip[0] = 168;
         settings.ip[0] = 1;
