@@ -60,11 +60,11 @@ void SmartSwitch_Init(void)
 
     if(NvM_ReadBlock( 0, sizeof(settings), 1, (uint8_t*)(&settings)) == 0){
         settings.ip[0] = 192;
-        settings.ip[0] = 168;
-        settings.ip[0] = 1;
-        settings.ip[0] = 137;
+        settings.ip[1] = 168;
+        settings.ip[2] = 1;
+        settings.ip[3] = 137;
         settings.id = 999;
-        NvM_Write((uint32_t*)(&settings), 1);
+        NvM_Write((uint32_t*)(&settings), 0);
     }
 }
 
@@ -374,7 +374,7 @@ uint16_t smartswitch_cfg_msg(char *msg, uint16_t len)
                     settings.id= __atoi(msg + i + USB_CFG_SPLIT_CHAR_POS + 1);
                     SmartSwitch_cdc_tx(str);
                     result = i + USB_CFG_MSG_LEN;
-                    NvM_Write((uint32_t*)(&settings), 1);
+                    NvM_Write((uint32_t*)(&settings), 0);
                 }
             }
         }
