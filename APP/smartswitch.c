@@ -14,17 +14,20 @@
 #include "smartswitch_cfg.h"
 #include "rtc.h"
 #include "io.h"
-#include "uart.h"
 #include "delays.h"
 #include "nvm.h"
 #include "str.h"
+
+#ifndef _STATIC
+#define _STATIC static
+#endif
 
 bool smartswitch_roomActive = false;
 uint8_t darkness_level = 0;
 uint16_t radiatior_q[2] = {0, 0};
 uint32_t temp_target;
 bool isUsbAttached = false;
-static nvmSettings_st settings;
+_STATIC nvmSettings_st settings;
 
 typedef struct date_s{
     uint8_t year;
@@ -142,14 +145,14 @@ void SmartSwitch_SlowTask(void)
     IO_openRadiatorValve(1, (temp_target > t[0]/10));
 }
 
-void SmartSwitch_Action(bool presence,bool button)
+void SmartSwitch_Action(bool presence, bool button)
 {
     if( presence ){
         IO_setDimmer(20);
     }else{
         IO_setDimmer(0);
     }
-    if( !button ){
+    if( button ){
         IO_setLights(!IO_getLights());
     }
 }
@@ -296,12 +299,6 @@ void smartswitch_getdate(date_st * date)
     BCD_TO_INT(hour_bcd, date->hour);
     BCD_TO_INT(min_bcd, date->min);
     BCD_TO_INT(sec_bcd, date->sec);
-}
-
-void SmartSwitch_extensionComs(void)
-{
-    char message[]= "SHS0987{dimmer:100}";
-    UART_tx( message, strlen(message));
 }
 
 void SmartSwitch_cdc_byte_ready(uint8_t port)

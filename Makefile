@@ -27,7 +27,7 @@ SRCS += ./Drivers/Enc/enc28j60.c
 SRCS += ./Drivers/USB_CDC/udi_cdc.c ./Drivers/USB_CDC/udi_cdc_desc.c
 SRCS += ./Drivers/USB_CDC/udc.c ./Drivers/USB_CDC/udp_device.c
 SRCS += $(wildcard ./cmsis/*.c)
-SRCS += ./APP/smartswitch.c
+SRCS += ./APP/smartswitch.c ./APP/extensionscoms.c
 SRCS += ./misc/str.c
 SRCS += ./misc/delays.c
 SRCS += ./misc/graphics.c
@@ -70,6 +70,7 @@ all: $(OBJECTS)
 
 clean:
 	@find ./ -name "*.o" -delete
+	@find ./ -name "*.d" -delete
 	@rm -f ./smartSwitch.elf
 
 %.o: %.c

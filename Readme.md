@@ -107,3 +107,16 @@ gdb-multiarch -x ./gdbinit.gdb ./smartSwitch.elf
 target remote localhost:3333
 load
 '''
+
+# Satellite
+
+Satellaties allow to have more than one switch handling the same light. They communicate with
+this devices using UART. Each one have an Id from 1 to 5.
+
+The master (this device) will transmit periodically one message to each id with the
+format "SHS090X{dimmer:Y}", where X is the Id and Y the dimmer (from 0 to 100).
+
+Each device will reply only if the Id match its own id. The reply format is "SHS09X{Y}"
+where X is the Id and Y is "True" or "False". True means that the button in the satellite was
+pressend since the last query.
+
