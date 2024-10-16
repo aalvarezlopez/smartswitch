@@ -214,7 +214,7 @@ uint8_t IO_getDimmer(void)
 
 bool IO_isButtonPressed(void)
 {
-    return PIOA->PIO_PDSR & PIO_PDSR_P8 == 0 ? true : false;
+    return ((PIOA->PIO_PDSR & PIO_PDSR_P8) == 0) ? true : false;
 }
 
 bool IO_q1(void)

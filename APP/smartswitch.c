@@ -25,6 +25,7 @@
 bool smartswitch_roomActive = false;
 uint8_t darkness_level = 0;
 uint16_t radiatior_q[2] = {0, 0};
+uint8_t flow_l_min[2] = {0, 0};
 uint32_t temp_target;
 bool isUsbAttached = false;
 _STATIC nvmSettings_st settings;
@@ -135,6 +136,7 @@ void SmartSwitch_SlowTask(void)
 
     nsensors =  DS18B20_getTempC(t);
 
+    smartswitch_calculateflow();
     Display_printTime(date.hour, date.min);
     Display_printDate(date.day, date.month);
     Display_printHeat(temp_target > (t[0]/10));
@@ -268,19 +270,22 @@ void SmartSwitch_statusMessage(char * const msg)
     int_to_str(msg + 66, shutter[1], 3);
     msg[69] = ';';
     int_to_str(msg + 70, shutter[2], 3);
-    strcpy(msg+73, ",\nRTEMP:");
+    strcpy(msg+73, ",\nRFLOW:");
+    int_to_str(msg + 81, flow_l_min[0], 5);
+    strcpy(msg+86, "#");
+    int_to_str(msg + 87 , flow_l_min[1], 5);
+    strcpy(msg+92, ",\nRTEMP:");
     for(uint8_t i = 0; i < nsensors; i++){
-        int_to_str(msg + 81 + (3*i), t[i + 1] / 10, 2);
-        strcpy(msg+83+ (3 * i), "#");
+        int_to_str(msg + 100 + (3*i), t[i + 1] / 10, 2);
+        strcpy(msg+102+ (3 * i), "#");
     }
-    msg[81 + (3*nsensors)] = '}';
-    msg[82 + (3*nsensors)] = '[';
-    msg[83 + (3*nsensors)] = '0';
-    msg[84 + (3*nsensors)] = '1';
-    msg[85 + (3*nsensors)] = ']';
-    msg[86 + (3*nsensors)] = '\n';
-    msg[87 + (3*nsensors)] = 0;
-
+    msg[100 + (3*nsensors)] = '}';
+    msg[101 + (3*nsensors)] = '[';
+    msg[103 + (3*nsensors)] = '0';
+    msg[104 + (3*nsensors)] = '1';
+    msg[105 + (3*nsensors)] = ']';
+    msg[106 + (3*nsensors)] = '\n';
+    msg[107 + (3*nsensors)] = 0;
 }
 
 void SmartSwitch_broadcastMessage(char * const msg)
@@ -391,4 +396,15 @@ uint16_t smartswitch_cfg_msg(char *msg, uint16_t len)
         }
     }
     return result;
+}
+
+void smartswitch_calculateflow(void)
+{
+    static uint16_t last_q[2];
+    for(uint8_t i = 0; i < 2; i++){
+        if( last_q[i] < radiatior_q[i] ){
+            flow_l_min[i] = (radiatior_q[i] - last_q[i]) / PULSES_LITER;
+        }
+        last_q[i] = radiatior_q[i];
+    }
 }
