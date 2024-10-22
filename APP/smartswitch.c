@@ -17,6 +17,7 @@
 #include "delays.h"
 #include "nvm.h"
 #include "str.h"
+#include "dimmer.h"
 
 #ifndef _STATIC
 #define _STATIC static
@@ -50,17 +51,8 @@ void SmartSwitch_Init(void)
     IO_openRadiatorValve(0, false);
     IO_openRadiatorValve(1, false);
     IO_setLights(false);
-    for(uint8_t j = 0; j < 2; j++){
-        for(uint8_t i = 20; i < 100; i++){
-            IO_setDimmer(i);
-            delay_ms(10);
-        }
-        for(uint8_t i = 100; i > 20; i--){
-            IO_setDimmer(i);
-            delay_ms(10);
-        }
-    }
-    IO_setDimmer(0);
+    Dimmer_Init();
+    Dimmer_start(0, 100, 10, 1);
 
     if(NvM_ReadBlock( 0, sizeof(settings), 1, (uint8_t*)(&settings)) == 0){
         settings.ip[0] = 192;
@@ -125,6 +117,8 @@ void SmartSwitch_Task(void)
     }
 
     SmartSwitch_extensionComs();
+    SmartSwitch_extensionComsRx();
+    Dimmer_Task();
 }
 
 void SmartSwitch_SlowTask(void)
@@ -150,9 +144,9 @@ void SmartSwitch_SlowTask(void)
 void SmartSwitch_Action(bool presence, bool button)
 {
     if( presence ){
-        IO_setDimmer(20);
+        Dimmer_start(0, 100, 10, 1);
     }else{
-        IO_setDimmer(0);
+        Dimmer_start(100, 0, 10, 1);
     }
     if( button ){
         IO_setLights(!IO_getLights());
