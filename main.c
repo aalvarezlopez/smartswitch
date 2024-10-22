@@ -33,6 +33,7 @@ int main(void)
             ENC_Task();
             EtherCard_Task();
             TCPIP_Task();
+            Dimmer_Task();
             OS_Task_B = false;
         }
         if(OS_Task_C == true){

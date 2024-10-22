@@ -49,10 +49,14 @@ void Dimmer_setLevel(uint8_t level)
 
 void Dimmer_start(uint8_t init, uint8_t end, uint8_t step, uint8_t speed)
 {
-    dimmer_currentstep = step;
-    dimmer_currentSpeed = speed;
-    dimmer_targetLevel = end;
-    dimmer_currentLevel = init;
+    if( end != dimmer_currentLevel ){
+        if( dimmer_currentLevel == dimmer_targetLevel){
+            dimmer_currentLevel = init;
+        }
+        dimmer_currentstep = step;
+        dimmer_currentSpeed = speed;
+        dimmer_targetLevel = end;
+    }
     IO_setDimmer(dimmer_currentLevel);
 }
 

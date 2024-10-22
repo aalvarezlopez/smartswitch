@@ -52,7 +52,7 @@ void SmartSwitch_Init(void)
     IO_openRadiatorValve(1, false);
     IO_setLights(false);
     Dimmer_Init();
-    Dimmer_start(0, 100, 10, 1);
+    Dimmer_start(0, 100, 3, 1);
 
     if(NvM_ReadBlock( 0, sizeof(settings), 1, (uint8_t*)(&settings)) == 0){
         settings.ip[0] = 192;
@@ -118,7 +118,6 @@ void SmartSwitch_Task(void)
 
     SmartSwitch_extensionComs();
     SmartSwitch_extensionComsRx();
-    Dimmer_Task();
 }
 
 void SmartSwitch_SlowTask(void)
@@ -144,9 +143,9 @@ void SmartSwitch_SlowTask(void)
 void SmartSwitch_Action(bool presence, bool button)
 {
     if( presence ){
-        Dimmer_start(0, 100, 10, 1);
+        Dimmer_start(0, 100, 3, 1);
     }else{
-        Dimmer_start(100, 0, 10, 1);
+        Dimmer_start(100, 0, 3, 1);
     }
     if( button ){
         IO_setLights(!IO_getLights());
