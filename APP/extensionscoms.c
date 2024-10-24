@@ -51,7 +51,7 @@ void SmartSwitch_extensionComs_Parser(char *msg)
                 *(ptr +  9) == 'R' &&
                 *(ptr + 10) == 'U' &&
                 *(ptr + 11) == 'E'){
-                SmartSwitch_Action(false, true);
+                SmartSwitch_ExtAction(true);
             }
         }
     }

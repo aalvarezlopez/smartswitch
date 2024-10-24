@@ -13,6 +13,13 @@
 
 /******** Darnkess level percentage function *****/
 
+#define LOG_ACTION_BUTTON 
+typedef enum smartswitchlog_e{
+    BUTTON_ACTION,
+    PRESENCE,
+    BUTTON_EXT
+}smartswitch_et;
+
 #define SMARTSWITCH_DARK_0   1000
 #define SMARTSWITCH_DARK_100 2200
 #define PULSES_LITER 400u

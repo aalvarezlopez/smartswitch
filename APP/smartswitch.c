@@ -31,6 +31,9 @@ uint32_t temp_target;
 bool isUsbAttached = false;
 _STATIC nvmSettings_st settings;
 
+uint8_t smartswitch_log[32];
+uint8_t smartswitch_logcounter = 0;
+
 typedef struct date_s{
     uint8_t year;
     uint8_t month;
@@ -144,11 +147,26 @@ void SmartSwitch_Action(bool presence, bool button)
 {
     if( presence ){
         Dimmer_start(0, 100, 3, 1);
+        smartswitch_log[smartswitch_logcounter%32] = 0xA0 | (PRESENCE);
+        smartswitch_logcounter++;
     }else{
         Dimmer_start(100, 0, 3, 1);
+        smartswitch_log[smartswitch_logcounter%32] = 0xB0 | (PRESENCE);
+        smartswitch_logcounter++;
     }
     if( button ){
         IO_setLights(!IO_getLights());
+        smartswitch_log[smartswitch_logcounter%32] = 0xC0 | (BUTTON_ACTION);
+        smartswitch_logcounter++;
+    }
+}
+
+void SmartSwitch_ExtAction(bool button)
+{
+    if( button ){
+        IO_setLights(!IO_getLights());
+        smartswitch_log[smartswitch_logcounter%32] = 0xD0 | (BUTTON_EXT);
+        smartswitch_logcounter++;
     }
 }
 
