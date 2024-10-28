@@ -262,41 +262,41 @@ void SmartSwitch_statusMessage(char * const msg)
     msg[6] = ':';
     int_to_str(msg + 7, date.sec, 2);
     strcpy(msg+9, "]{TEMP:");
-    int_to_str(msg + 16, t[0] / 10, 2);
+    int_to_str(msg + 16, t[0], 3);
     if( rad[0] == true || rad[1] == true ){
-        strcpy(msg+18, ",\nRAD: ON");
+        strcpy(msg+19, ",\nRAD: ON");
     }else{
-        strcpy(msg+18, ",\nRAD:OFF");
+        strcpy(msg+19, ",\nRAD:OFF");
     }
     if( IO_getLights() ){
-        strcpy(msg+27, ",\nLIGHT:ON ");
+        strcpy(msg+28, ",\nLIGHT:ON ");
     }else{
-        strcpy(msg+27, ",\nLIGHT:OFF");
+        strcpy(msg+28, ",\nLIGHT:OFF");
     }
-    strcpy(msg+38, ",\nDARKNESS:");
-    int_to_str(msg + 49, darkness_level , 3);
-    strcpy(msg+52, ",\nSHUTTER:");
-    int_to_str(msg + 62, shutter[0], 3);
-    msg[65] = ';';
-    int_to_str(msg + 66, shutter[1], 3);
-    msg[69] = ';';
-    int_to_str(msg + 70, shutter[2], 3);
-    strcpy(msg+73, ",\nRFLOW:");
-    int_to_str(msg + 81, flow_l_min[0], 5);
-    strcpy(msg+86, "#");
-    int_to_str(msg + 87 , flow_l_min[1], 5);
-    strcpy(msg+92, ",\nRTEMP:");
+    strcpy(msg+39, ",\nDARKNESS:");
+    int_to_str(msg + 50, darkness_level , 3);
+    strcpy(msg+53, ",\nSHUTTER:");
+    int_to_str(msg + 63, shutter[0], 3);
+    msg[66] = ';';
+    int_to_str(msg + 67, shutter[1], 3);
+    msg[70] = ';';
+    int_to_str(msg + 71, shutter[2], 3);
+    strcpy(msg+74, ",\nRFLOW:");
+    int_to_str(msg + 82, flow_l_min[0], 5);
+    strcpy(msg+87, "#");
+    int_to_str(msg + 88 , flow_l_min[1], 5);
+    strcpy(msg+93, ",\nRTEMP:");
     for(uint8_t i = 0; i < nsensors; i++){
-        int_to_str(msg + 100 + (3*i), t[i + 1] / 10, 2);
-        strcpy(msg+102+ (3 * i), "#");
+        int_to_str(msg + 101 + (4*i), t[i + 1], 3);
+        strcpy(msg+104+ (4 * i), "#");
     }
-    msg[100 + (3*nsensors)] = '}';
-    msg[101 + (3*nsensors)] = '[';
-    msg[103 + (3*nsensors)] = '0';
-    msg[104 + (3*nsensors)] = '1';
-    msg[105 + (3*nsensors)] = ']';
-    msg[106 + (3*nsensors)] = '\n';
-    msg[107 + (3*nsensors)] = 0;
+    msg[101 + (4*nsensors)] = '}';
+    msg[102 + (4*nsensors)] = '[';
+    msg[104 + (4*nsensors)] = '0';
+    msg[105 + (4*nsensors)] = '1';
+    msg[106 + (4*nsensors)] = ']';
+    msg[107 + (4*nsensors)] = '\n';
+    msg[108 + (4*nsensors)] = 0;
 }
 
 void SmartSwitch_broadcastMessage(char * const msg)
