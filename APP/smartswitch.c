@@ -56,12 +56,11 @@ void SmartSwitch_Init(void)
     IO_setLights(false);
     Dimmer_Init();
     Dimmer_start(0, 100, 3, 1);
-
     if(NvM_ReadBlock( 0, sizeof(settings), 1, (uint8_t*)(&settings)) == 0){
         settings.ip[0] = 192;
         settings.ip[1] = 168;
         settings.ip[2] = 1;
-        settings.ip[3] = 137;
+        settings.ip[3] = 139;
         settings.id = 999;
         NvM_Write((uint32_t*)(&settings), 0);
     }
@@ -418,4 +417,9 @@ void smartswitch_calculateflow(void)
         }
         last_q[i] = radiatior_q[i];
     }
+}
+
+uint8_t SmartSwitch_getLowestIpAddr(void)
+{
+    return settings.ip[3];
 }

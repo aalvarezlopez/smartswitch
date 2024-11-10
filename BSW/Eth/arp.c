@@ -1,6 +1,7 @@
 #include "stdint.h"
 #include "stdbool.h"
 #include "EtherCard.h"
+#include "smartswitch.h"
 #include "arp.h"
 
 typedef struct ethernetdevice_s{
@@ -43,11 +44,11 @@ void ARP_sendrequest(char * ip)
     buffer[24] = 0x3A;
     buffer[25] = 0x25;
     buffer[26] = 0xC2;
-    buffer[27] = 0x29;
+    buffer[27] = 0x39 + SmartSwitch_getLowestIpAddr();
     buffer[28] = 192;
     buffer[29] = 168;
     buffer[30] = 1;
-    buffer[31] = MYIP;
+    buffer[31] = SmartSwitch_getLowestIpAddr();
     buffer[32] = 0x00;
     buffer[33] = 0x00;
     buffer[34] = 0x00;
@@ -101,11 +102,11 @@ void ARP_sendreplyrouter(char * originip, char * originmac)
     buffer[24] = 0x3A;
     buffer[25] = 0x25;
     buffer[26] = 0xC2;
-    buffer[27] = 0x29;
+    buffer[27] = 0x39 + SmartSwitch_getLowestIpAddr();
     buffer[28] = 192;
     buffer[29] = 168;
     buffer[30] = 1;
-    buffer[31] = MYIP;
+    buffer[31] = SmartSwitch_getLowestIpAddr();
     buffer[32] = originmac[0];
     buffer[33] = originmac[1];
     buffer[34] = originmac[2];

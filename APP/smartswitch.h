@@ -31,6 +31,7 @@ void SmartSwitch_extensionComs(void);
 void SmartSwitch_cdc_tx(char *str);
 void SmartSwitch_cdc_byte_ready(uint8_t port);
 bool SmartSwitch_getUsbStatus(void);
+uint8_t SmartSwitch_getLowestIpAddr(void);
 uint16_t smartswitch_cfg_msg(char *msg, uint16_t len); 
 
 
